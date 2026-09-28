@@ -1,0 +1,27 @@
+{
+  "name": "awaargii",
+  "version": "1.0.0",
+  "description": "Awaargii — Urdu poetry, recited",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdismaiiil/D-w-n-e-Kh-s.git"
+  },
+  "keywords": [
+    "urdu",
+    "poetry",
+    "awaargii"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mdismaiiil/D-w-n-e-Kh-s/issues"
+  },
+  "homepage": "https://github.com/mdismaiiil/D-w-n-e-Kh-s#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
