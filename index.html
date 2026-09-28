@@ -378,6 +378,10 @@ section.block + section.block{ border-top:1px solid var(--rule); }
 /* persistent host: always in the render tree so audio never pauses when overlays close */
 #yt-host{ position:fixed; right:0; bottom:0; width:200px; height:200px; overflow:hidden; opacity:0.01; pointer-events:none; z-index:1; }
 #yt-host iframe{ width:100%; height:100%; display:block; border:0; }
+#yt-host.float{ opacity:1; pointer-events:auto; z-index:310; right:14px; bottom:calc(var(--mini-h) + 14px); width:356px; height:200px; border:1px solid rgba(236,226,201,0.18); box-shadow:0 10px 34px rgba(0,0,0,0.6); background:#000; }
+@media (max-width:700px){ #yt-host.float{ width:min(356px,calc(100vw - 28px)); } }
+#yt-host .yt-expand{ display:none; position:absolute; top:6px; right:6px; z-index:3; padding:4px 10px; font-size:.68rem; letter-spacing:.1em; text-transform:uppercase; background:rgba(14,12,9,.78); color:var(--parchment); border:1px solid var(--gold-soft); cursor:pointer; }
+#yt-host.float .yt-expand{ display:block; }
 #yt-host.live{ opacity:1; pointer-events:auto; z-index:600; border:1px solid rgba(236,226,201,0.18); box-shadow:0 14px 44px rgba(0,0,0,0.65); background:#000; }
 .immersive .video-slot{ width:min(480px,92vw); aspect-ratio:16/9; min-height:200px; margin-bottom:26px; position:relative; background:#0e0c09; }
 .immersive .video-slot .art-fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5; }
@@ -510,6 +514,7 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
 .cr-name{ font-family:var(--font-display); font-style:italic; font-weight:500; font-size:clamp(1.7rem,4.2vw,2.3rem); line-height:1.15; color:var(--gold); transition:color .3s var(--ease), letter-spacing .4s var(--ease); }
 .cr-name:hover{ color:var(--parchment); letter-spacing:.02em; }
 .cr-follow{ margin-top:14px; display:inline-flex; align-items:center; gap:9px; padding:9px 20px; border:1px solid var(--gold-soft); border-radius:999px; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--parchment-dim); transition:all .3s var(--ease); }
+.cr-legal{ max-width:640px; margin:26px 0 0; font-size:.72rem; line-height:1.75; color:var(--parchment-faint); }
 .cr-follow svg{ width:16px; height:16px; }
 .cr-follow:hover{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
 
@@ -599,7 +604,7 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
 </div>
 
 <div class="toast" id="toast"></div>
-<div id="yt-host"><div id="yt-target"></div></div>
+<div id="yt-host"><div id="yt-target"></div><button class="yt-expand" id="ytExpand" type="button">Expand</button></div>
 
 <script>window.__ytApiReady=false;window.onYouTubeIframeAPIReady=function(){window.__ytApiReady=true;if(window.__ytInit)window.__ytInit();};</script>
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -839,7 +844,7 @@ var Store = {
   volume: lsGet('volume', 80),
   rate: lsGet('rate', 1),
   repeatMode: lsGet('repeatMode', 'off'),    // off | all | one
-  cache: lsGet('cache', {}),                 // { [poetSlug]: {items:[...], fetchedAt: ts} }
+  cache: lsGet('cache2', {}),                 // { [poetSlug]: {items:[...], fetchedAt: ts} }
   recDb: lsGet('recDb', {}),                 // flat map id -> recording, for favorites/recent lookups across sessions
 
   saveFavorites: function(){ lsSet('favorites', this.favorites); },
@@ -848,7 +853,7 @@ var Store = {
   saveVolume: function(){ lsSet('volume', this.volume); },
   saveRate: function(){ lsSet('rate', this.rate); },
   saveRepeat: function(){ lsSet('repeatMode', this.repeatMode); },
-  saveCache: function(){ lsSet('cache', this.cache); },
+  saveCache: function(){ lsSet('cache2', this.cache); },
   saveRecDb: function(){ lsSet('recDb', this.recDb); },
   saveApiKey: function(k){ this.apiKey = k; lsSet('apiKey', k); },
 
@@ -895,13 +900,10 @@ var App = {
 
 /* ============================================================
    Keyless archive loader — no API key, no signup.
-   1. public Piped / Invidious playlist APIs (all metadata in one request)
-   2. fallback: YouTube's own embed player reveals a playlist's video ids,
-      YouTube oEmbed supplies every title.
+   Official YouTube only: the IFrame player reveals a playlist's video ids,
+   YouTube oEmbed supplies every title and the channel name.
    Nothing is invented: each entry is exactly what the playlist returns.
    ============================================================ */
-var PIPED_HOSTS = ['https://pipedapi.kavin.rocks','https://pipedapi.adminforge.de','https://api.piped.private.coffee','https://pipedapi.leptons.xyz','https://pipedapi.nosebs.ru','https://pipedapi.reallyaweso.me'];
-var INVIDIOUS_HOSTS = ['https://inv.nadeko.net','https://yewtu.be','https://invidious.nerdvpn.de','https://invidious.privacyredirect.com','https://invidious.jing.rocks','https://iv.ggtyler.dev'];
 
 function fetchJSON(url, ms){
   return new Promise(function(resolve, reject){
@@ -945,43 +947,6 @@ function mapLimit(arr, limit, fn){
   });
 }
 
-function pipedPlaylist(base, id){
-  var items = [];
-  function more(np, guard){
-    if(!np || guard > 20) return Promise.resolve(items);
-    return fetchJSON(base + '/nextpage/playlists/' + id + '?nextpage=' + encodeURIComponent(np)).then(function(n){
-      items = items.concat(n.relatedStreams || []);
-      return more(n.nextpage, guard + 1);
-    });
-  }
-  return fetchJSON(base + '/playlists/' + id).then(function(d){
-    items = (d.relatedStreams || []).slice();
-    return more(d.nextpage, 0);
-  }).then(function(list){
-    return list.map(function(v){
-      var m = /[?&]v=([\w-]{11})/.exec(v.url || '');
-      return m ? {videoId:m[1], title:v.title, duration:v.duration || 0, author:v.uploaderName || ''} : null;
-    }).filter(Boolean);
-  });
-}
-
-function invidiousPlaylist(base, id){
-  var out = [];
-  function page(n){
-    return fetchJSON(base + '/api/v1/playlists/' + id + '?page=' + n).then(function(d){
-      var v = d.videos || [];
-      out = out.concat(v);
-      if(v.length >= 100 && n < 10) return page(n + 1);
-      return out;
-    });
-  }
-  return page(1).then(function(list){
-    return list.map(function(v){
-      return v.videoId ? {videoId:v.videoId, title:v.title, duration:v.lengthSeconds || 0, author:v.author || ''} : null;
-    }).filter(Boolean);
-  });
-}
-
 function oembedInfo(id){
   var url = 'https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id);
   return fetchJSON(url, 10000).catch(function(){ return fetchJSON(url, 10000); }).then(function(d){
@@ -1002,12 +967,19 @@ function ytVars(extra){
   return v;
 }
 
+var probeChain = Promise.resolve();
 function probePlaylistIds(listId){
+  var run = probeChain.then(function(){ return probeOne(listId); });
+  probeChain = run.catch(function(){});
+  return run;
+}
+function probeOne(listId){
   return whenYT().then(function(){
     return new Promise(function(resolve, reject){
       var holder = document.createElement('div');
       holder.id = 'probe_' + uid();
-      $('#yt-host').appendChild(holder);
+      var ph = $('#probe-host'); if(!ph){ ph = document.createElement('div'); ph.id = 'probe-host'; ph.style.cssText='position:fixed;left:-320px;top:0;width:200px;height:200px;opacity:0;pointer-events:none;'; document.body.appendChild(ph); }
+      ph.appendChild(holder);
       var pl, poll, killer;
       function finish(err, ids){
         clearInterval(poll); clearTimeout(killer);
@@ -1039,20 +1011,10 @@ function playlistViaProbe(listId){
 }
 
 function playlistRaw(listId){
-  var tasks = [];
-  PIPED_HOSTS.forEach(function(h){ tasks.push(function(){ return pipedPlaylist(h, listId); }); });
-  INVIDIOUS_HOSTS.forEach(function(h){ tasks.push(function(){ return invidiousPlaylist(h, listId); }); });
-  return firstOk(tasks).catch(function(){ return playlistViaProbe(listId); });
+  return playlistViaProbe(listId);   // official YouTube IFrame API + official oEmbed only
 }
 
-/* channel names are never shown; everything is credited to Awaargii */
-var CHANNEL_RE = /spin\s*ace(\s*tennis)?|tennis\s*khursheed|khursheed\s*abdullah|jamal\s*roomi|rekhta/gi;
-function scrubRec(r){
-  if(!r) return r;
-  if(r.title) r.title = r.title.replace(CHANNEL_RE,'').replace(/\s*[|\-\u2013\u2014:]\s*(?=[|\-\u2013\u2014:]|$)/g,'').replace(/^\s*[|\-\u2013\u2014:]\s*/,'').replace(/\s{2,}/g,' ').trim() || '(untitled recording)';
-  r.collection = 'Awaargii';
-  return r;
-}
+function scrubRec(r){ return r; }
 function toRec(poet, raw, i){
   return scrubRec({
     id: poet.slug + ':' + raw.videoId,
@@ -1062,7 +1024,7 @@ function toRec(poet, raw, i){
     poetName: poet.name,
     thumbnail: 'https://i.ytimg.com/vi/' + raw.videoId + '/hqdefault.jpg',
     position: i,
-    collection: 'Awaargii',
+    collection: raw.author || '',
     duration: raw.duration || 0,
     embeddable: true,
     unavailable: false
@@ -1362,8 +1324,9 @@ var Player = {
     $('#immPoet').textContent = r.poetName;
     $('#immTitle').textContent = r.title;
     $('#immCollection').textContent = r.collection || '';
+    refreshHost();
     $('#aboutPanel').innerHTML = '<div><strong class="dim">Poet:</strong> '+esc(r.poetName)+'</div>'+
-      '<div><strong class="dim">Source:</strong> '+esc('Awaargii')+'</div>'+
+      '<div><strong class="dim">Source:</strong> '+esc(r.collection||'YouTube')+'</div>'+
       '<div><strong class="dim">Recording:</strong> '+esc(r.title)+'</div>';
     $('#rateLabel').textContent = Store.rate.toFixed(2).replace(/0$/,'').replace(/\.$/,'.0') + '\u00d7';
     $('#volSlider').value = Store.volume;
@@ -1678,7 +1641,7 @@ function parseHash(){
   return { route:route, param: param, query: query };
 }
 
-var CREDIT = '<footer class="credit"><div class="cr-orn"><span></span><i>\u2766</i><span></span></div><div class="cr-small">crafted with love by</div><a class="cr-name" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">@md.ismaiiil</a><a class="cr-follow" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg><span>Follow on Instagram</span></a></footer>';
+var CREDIT = '<footer class="credit"><div class="cr-orn"><span></span><i>\u2766</i><span></span></div><div class="cr-small">crafted with love by</div><a class="cr-name" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">@md.ismaiiil</a><a class="cr-follow" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg><span>Follow on Instagram</span></a><p class="cr-legal">Recordings play from YouTube through its official player and belong to their respective channels and rights holders. Poetry belongs to the poets and their publishers and is read on Rekhta. Portraits belong to their respective owners. Awaargii is a free, non-commercial fan project with no ads and no downloads. To request removal of anything, message @md.ismaiiil on Instagram and it will be taken down promptly.</p></footer>';
 function renderRoute(){
   var h = parseHash();
   if(App.route!==h.route || App.routeParam!==h.param || h.query.tab!==App.lastTab){  }
@@ -1710,7 +1673,7 @@ function placeVideo(){
   var host = $('#yt-host'), slot = $('#videoSlot'), box = document.querySelector('.immersive-content');
   if(!host || !slot || !$('#immersive').classList.contains('show')){ return; }
   var r = slot.getBoundingClientRect(), c = box.getBoundingClientRect();
-  host.classList.add('live');
+  host.classList.remove('float'); host.classList.add('live');
   host.style.left = r.left+'px'; host.style.top = r.top+'px';
   host.style.width = r.width+'px'; host.style.height = r.height+'px';
   host.style.right = 'auto'; host.style.bottom = 'auto';
@@ -1722,6 +1685,12 @@ function unplaceVideo(){
   host.classList.remove('live');
   host.style.left = host.style.top = host.style.width = host.style.height = host.style.right = host.style.bottom = host.style.clipPath = '';
 }
+function refreshHost(){
+  var host = $('#yt-host'); if(!host) return;
+  if($('#immersive').classList.contains('show')){ placeVideo(); return; }
+  unplaceVideo();
+  host.classList.toggle('float', !!Player.current);
+}
 function openImmersive(){
   $('#immersive').classList.add('show'); document.body.style.overflow='hidden';
   placeVideo(); requestAnimationFrame(placeVideo);
@@ -1729,7 +1698,7 @@ function openImmersive(){
 }
 function closeImmersive(){
   $('#immersive').classList.remove('show'); document.body.style.overflow='';
-  clearInterval(placeTimer); unplaceVideo();
+  clearInterval(placeTimer); refreshHost();
 }
 window.addEventListener('resize', placeVideo);
 (function(){ var bx=document.querySelector('.immersive-content'); if(bx) bx.addEventListener('scroll', placeVideo, {passive:true}); })();
@@ -1762,6 +1731,7 @@ function bindStaticControls(){
   $('#mpPrev').innerHTML = ICON.prev; $('#mpNext').innerHTML = ICON.next; $('#mpPlay').innerHTML = ICON.play;
   $('#mpQueueBtn').innerHTML = ICON.queue;
   $('#mpQueueBtn').addEventListener('click', openQueue);
+  $('#ytExpand').addEventListener('click', function(){ if(Player.current) openImmersive(); });
   $('#mpThumb').addEventListener('click', function(){ if(Player.current) openImmersive(); });
   $('#mpMeta').addEventListener('click', function(){ if(Player.current) openImmersive(); });
 
@@ -1909,7 +1879,7 @@ function restoreQueueIfAny(){
 }
 
 function init(){
-  try{ Object.keys(Store.recDb||{}).forEach(function(k){ scrubRec(Store.recDb[k]); }); (Player.queue||[]).forEach(scrubRec); Store.saveQueue&&Store.saveQueue(); }catch(e){}
+  try{ Object.keys(Store.recDb||{}).forEach(function(k){ if(Store.recDb[k] && Store.recDb[k].collection==='Awaargii') Store.recDb[k].collection=''; }); (Player.queue||[]).forEach(function(r){ if(r && r.collection==='Awaargii') r.collection=''; }); }catch(e){}
   bindStaticControls();
   if(window.__ytApiReady || (window.YT && window.YT.Player)) ytInit();
   window.addEventListener('hashchange', function(){ document.documentElement.classList.remove('no-anim'); renderRoute(); });
