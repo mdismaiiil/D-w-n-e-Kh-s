@@ -374,7 +374,16 @@ section.block + section.block{ border-top:1px solid var(--rule); }
 @keyframes reelspin{ to{ transform:rotate(360deg); } }
 /* persistent host: always in the render tree so audio never pauses when overlays close */
 #yt-host{ position:fixed; right:0; bottom:0; width:200px; height:200px; overflow:hidden; opacity:0.01; pointer-events:none; z-index:1; }
-#yt-host iframe{ width:200px; height:200px; }
+#yt-host iframe{ width:100%; height:100%; display:block; border:0; }
+#yt-host.live{ opacity:1; pointer-events:auto; z-index:600; border:1px solid rgba(236,226,201,0.18); box-shadow:0 14px 44px rgba(0,0,0,0.65); background:#000; }
+.immersive .video-slot{ width:min(480px,92vw); aspect-ratio:16/9; min-height:200px; margin-bottom:26px; position:relative; background:#0e0c09; }
+.immersive .video-slot .art-fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5; }
+.immersive .video-slot .yt-reel-window, .immersive .video-slot .corner-frame{ display:none; }
+.yt-link{ display:inline-flex; flex-wrap:wrap; justify-content:center; gap:6px 10px; margin:-14px 0 24px; padding:8px 16px; border:1px solid var(--gold-soft); border-radius:999px; font-size:.78rem; letter-spacing:.06em; color:var(--parchment-dim); max-width:92vw; transition:all .3s var(--ease); }
+.yt-link b{ font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); }
+.yt-link:hover{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
+.yt-link:hover b{ color:var(--ink); }
+
 .yt-reel-window::after{ content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 10px 4px rgba(0,0,0,0.6); pointer-events:none; }
 
 .immersive .track-poet{ font-size:0.86rem; letter-spacing:0.05em; color:var(--parchment-dim); margin-bottom:8px; }
@@ -538,14 +547,15 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
   <div class="grain" style="opacity:0.045;"></div>
   <button class="icon-btn immersive-close" id="immClose" aria-label="Close player"></button>
   <div class="immersive-content">
-    <div class="art">
-      <img id="immArt" alt="">
+    <div class="video-slot" id="videoSlot">
+      <img id="immArt" class="art-fallback" alt="">
       <div class="corner-frame"></div>
       <div class="yt-reel-window" id="reelWindow"></div>
     </div>
     <div class="track-poet" id="immPoet">—</div>
     <h2 id="immTitle">—</h2>
     <div class="track-collection" id="immCollection"></div>
+    <a class="yt-link" id="immYt" href="#" target="_blank" rel="noopener noreferrer"><b>Watch on YouTube</b><span id="immYtUrl"></span></a>
 
     <div class="progress-row">
       <time id="immCur">0:00</time>
@@ -1354,6 +1364,7 @@ var Player = {
     $('#immPoet').textContent = r.poetName;
     $('#immTitle').textContent = r.title;
     $('#immCollection').textContent = r.collection || '';
+    if(r.videoId){ var yu='https://www.youtube.com/watch?v='+r.videoId; $('#immYt').href=yu; $('#immYtUrl').textContent='youtube.com/watch?v='+r.videoId; }
     $('#aboutPanel').innerHTML = '<div><strong class="dim">Poet:</strong> '+esc(r.poetName)+'</div>'+
       '<div><strong class="dim">Source:</strong> '+esc('Awaargii')+'</div>'+
       '<div><strong class="dim">Recording:</strong> '+esc(r.title)+'</div>';
@@ -1697,8 +1708,31 @@ function renderRoute(){
    mini player / immersive / queue drawer visibility
    ============================================================ */
 function showMiniPlayer(){ $('#miniPlayer').classList.add('show'); }
-function openImmersive(){ $('#immersive').classList.add('show'); document.body.style.overflow='hidden'; }
-function closeImmersive(){ $('#immersive').classList.remove('show'); document.body.style.overflow=''; }
+var placeTimer = null;
+function placeVideo(){
+  var host = $('#yt-host'), slot = $('#videoSlot');
+  if(!host || !slot || !$('#immersive').classList.contains('show')){ return; }
+  var r = slot.getBoundingClientRect();
+  host.classList.add('live');
+  host.style.left = r.left+'px'; host.style.top = r.top+'px';
+  host.style.width = r.width+'px'; host.style.height = r.height+'px';
+  host.style.right = 'auto'; host.style.bottom = 'auto';
+}
+function unplaceVideo(){
+  var host = $('#yt-host'); if(!host) return;
+  host.classList.remove('live');
+  host.style.left = host.style.top = host.style.width = host.style.height = host.style.right = host.style.bottom = '';
+}
+function openImmersive(){
+  $('#immersive').classList.add('show'); document.body.style.overflow='hidden';
+  placeVideo(); requestAnimationFrame(placeVideo);
+  clearInterval(placeTimer); placeTimer = setInterval(placeVideo, 250);
+}
+function closeImmersive(){
+  $('#immersive').classList.remove('show'); document.body.style.overflow='';
+  clearInterval(placeTimer); unplaceVideo();
+}
+window.addEventListener('resize', placeVideo);
 function openQueue(){ $('#queueDrawer').classList.add('show'); $('#scrimOverlay').classList.add('show'); renderQueueDrawer(); }
 function closeQueue(){ $('#queueDrawer').classList.remove('show'); $('#scrimOverlay').classList.remove('show'); }
 
