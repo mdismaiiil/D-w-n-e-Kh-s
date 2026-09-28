@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>lafzon ki duniya — an archive of Urdu poetry</title>
+<title>Awaargii · आवारगी · آوارگی — Urdu poetry, recited</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🪶</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Noto+Serif+Devanagari:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   lafzon ki duniya — design tokens
+   Awaargii — design tokens
    ============================================================ */
 :root{
   --ink:        #14110d;
@@ -33,6 +33,7 @@
   --font-display: 'Cormorant Garamond', 'Noto Nastaliq Urdu', serif;
   --font-body: 'Lora', 'Noto Nastaliq Urdu', serif;
   --font-urdu: 'Noto Nastaliq Urdu', serif;
+  --font-deva: 'Noto Serif Devanagari', serif;
 
   --nav-h: 64px;
   --mini-h: 76px;
@@ -453,6 +454,43 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
   .hero{ min-height:86vh; }
   .rail-card{ flex-basis:150px; }
 }
+
+/* ---- brand scripts, poets index, written-poetry panel ---- */
+.brand-hi{ font-family:var(--font-deva); font-size:1rem; color:var(--parchment-dim); }
+.scripts{ display:flex; align-items:baseline; gap:22px; margin:0 0 20px; }
+.scripts .hi{ font-family:var(--font-deva); font-size:clamp(1.5rem,3.2vw,2.1rem); color:var(--parchment-dim); }
+.scripts .ur{ font-size:clamp(1.6rem,3.4vw,2.3rem); color:var(--parchment-dim); }
+.poets-index{ margin-top:18px; }
+.poet-entry{ display:grid; grid-template-columns:220px 1fr; gap:clamp(22px,4vw,48px); padding:40px 0; border-top:1px solid var(--rule); }
+.pe-plate{ cursor:pointer; border:1px solid var(--rule); position:relative; align-self:start; overflow:hidden; transition:border-color .3s; }
+.pe-plate:hover{ border-color:var(--rule-2); }
+.pe-plate .plate{ aspect-ratio:3/4; position:relative; }
+.pe-plate .plate::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 40px 8px rgba(0,0,0,0.55); }
+.pe-name{ margin:0 0 2px; }
+.pe-ur{ font-size:1.25rem; color:var(--parchment-dim); margin:0 0 4px; }
+.poet-entry .years{ color:var(--parchment-faint); font-size:0.86rem; margin:0 0 16px; }
+.pe-short{ max-width:58ch; color:var(--parchment-dim); margin:0 0 20px; }
+.facts{ display:grid; grid-template-columns:110px 1fr; gap:8px 18px; margin:0 0 26px; max-width:640px; font-size:0.88rem; }
+.facts dt{ color:var(--parchment-faint); }
+.facts dd{ margin:0; color:var(--parchment-dim); }
+.pe-actions{ display:flex; gap:14px; flex-wrap:wrap; }
+.read-panel{ padding:26px 0 10px; }
+.read-lead{ max-width:62ch; color:var(--parchment-dim); margin:0 0 22px; }
+.read-links{ display:flex; flex-wrap:wrap; gap:12px; }
+.read-link{ display:flex; flex-direction:column; gap:2px; padding:14px 20px; border:1px solid var(--rule-2); min-width:150px; transition:border-color .25s, background .25s; }
+.read-link:hover{ border-color:var(--gold-soft); background:rgba(255,255,255,0.02); }
+.rl-label{ font-family:var(--font-display); font-size:1.15rem; }
+.rl-host{ font-size:0.74rem; color:var(--parchment-faint); }
+.collections{ list-style:none; padding:0; margin:0; columns:2; column-gap:40px; max-width:560px; }
+.collections li{ padding:8px 0; border-bottom:1px solid var(--rule); break-inside:avoid; font-family:var(--font-display); font-size:1.08rem; }
+@media (max-width:700px){
+  .poet-entry{ grid-template-columns:1fr; }
+  .pe-plate{ max-width:170px; }
+  .facts{ grid-template-columns:90px 1fr; }
+  .collections{ columns:1; }
+  .brand-hi{ display:none; }
+  .scripts{ gap:14px; }
+}
 </style>
 </head>
 <body>
@@ -539,7 +577,7 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /* ============================================================
-   lafzon ki duniya — application script
+   Awaargii — application script
    ============================================================ */
 "use strict";
 
@@ -571,12 +609,24 @@ var ICON = {
    Only the id you supplied are used — nothing invented. Add more
    sources later (e.g. once you have playlists for Jaun Elia) by
    extending this array; the app re-syncs automatically. */
+function rekhtaSet(base){
+  return [
+    {label:'All writings', url:base},
+    {label:'Ghazals', url:base+'/ghazals'},
+    {label:'Nazms', url:base+'/nazms'},
+    {label:'Couplets', url:base+'/couplets'},
+    {label:'Videos', url:base+'/video'}
+  ];
+}
 var POETS = [
   {
     slug:'faiz-ahmed-faiz',
     name:'Faiz Ahmed Faiz',
     nameUrdu:'فیض احمد فیض',
     years:'1911 – 1984',
+    born:'Kala Qadir, Punjab (then Sialkot district)', died:'Lahore', known:'Ghazal and nazm; love poetry sharpened into protest',
+    collections:['Naqsh-e-Faryadi','Dast-e-Saba','Zindan-Nama','Dast-e-Tah-e-Sang'],
+    rekhta:rekhtaSet('https://www.rekhta.org/poets/faiz-ahmad-faiz'),
     initial:'ف',
     short:'The most widely read Urdu poet of the twentieth century, who set romance and revolution in the same breath.',
     bio:'Born in Sialkot in 1911, Faiz studied Arabic and English literature in Lahore before joining the British Indian Army and, later, the Progressive Writers\u2019 Movement. His verse fused the classical ghazal with the language of justice and resistance, a combination that brought him prison sentences under the Rawalpindi Conspiracy Case and years of exile, yet made him the best-selling Urdu poet in both India and Pakistan. In 1962 he became the first Asian awarded the Lenin Peace Prize. He died in Lahore in 1984.',
@@ -587,6 +637,9 @@ var POETS = [
     name:'Ahmad Faraz',
     nameUrdu:'احمد فراز',
     years:'1931 – 2008',
+    born:'Kohat, North-West Frontier', died:'Islamabad', known:'Ghazal; romantic and openly political verse',
+    collections:['Tanha Tanha','Dard Aashob','Jaanan Jaanan','Be-Awaz Gali Kuchon Mein','Shab-e-Khoon','Nayaft'],
+    rekhta:rekhtaSet('https://www.rekhta.org/poets/ahmad-faraz'),
     initial:'ف',
     short:'The great romantic voice of modern Urdu ghazal, as at home in resistance as in longing.',
     bio:'Born Syed Ahmad Shah in Kohat in 1931, Faraz studied Urdu and Persian literature before becoming a lecturer and, later, the founding director-general of the Pakistan Academy of Letters. His ghazals \u2014 lyrical, direct, endlessly quotable \u2014 made him one of the most recited poets of his generation, even as his open defiance of military rule cost him state honours he chose to return. He died in Islamabad in 2008.',
@@ -597,6 +650,9 @@ var POETS = [
     name:'Jaun Elia',
     nameUrdu:'جون ایلیا',
     years:'1931 – 2002',
+    born:'Amroha, United Provinces', died:'Karachi', known:'Ghazal; love, loss, philosophy and irony',
+    collections:['Shayad','Yaani','Gumaan','Lekin','Goya','Farnood'],
+    rekhta:rekhtaSet('https://www.rekhta.org/poets/jaun-eliya'),
     initial:'ج',
     short:'A philosopher-poet of loss and nihilism, whose diaries of despair became some of Urdu\u2019s most intimate ghazals.',
     bio:'Born Syed Sibt-e-Asghar Naqvi in Amroha in 1931, into a family of scholars, Jaun Elia was fluent in Arabic, Persian, Sanskrit and Hebrew before he was out of his teens. He migrated to Karachi in 1957 and spent decades writing poetry he was reluctant to publish \u2014 his first collection, Shayad, appeared only in 1991. Melancholic, self-lacerating and quietly funny, his ghazals of unfulfilled love and existential doubt have made him one of the most quoted poets among younger readers today. He died in Karachi in 2002.',
@@ -606,7 +662,10 @@ var POETS = [
     slug:'zia-mohyeddin',
     name:'Zia Mohyeddin',
     nameUrdu:'ضیاء محی الدین',
-    years:'1931 – 2023',
+    years:'1931 – 2023', reciter:true,
+    born:'Lyallpur (now Faisalabad), Punjab', died:'Karachi', known:'Recitation of Urdu poetry and prose; stage, film and television',
+    collections:['A Carrot Is a Carrot (2008)','Theatrics (2012)','The God of My Idolatry (2016)'],
+    rekhta:[{label:'Recitation videos', url:'https://www.rekhta.org/poets/zia-mohyeddin/video'}],
     initial:'ض',
     short:'Not a poet but Urdu\u2019s definitive voice \u2014 the reciter who taught generations how a ghazal should sound aloud.',
     bio:'Born in Lyallpur (now Faisalabad) in 1931, Zia Mohyeddin trained at RADA in London and built a stage and film career that ran from the West End premiere of A Passage to India to Lawrence of Arabia. In Pakistan he became something rarer: the actor whose recitations of Ghalib, Faiz and Iqbal defined how an entire country heard its own poetry, most famously through decades of live \u201cnashist\u201d recitation evenings. He founded and led the National Academy of Performing Arts in Karachi until his death in 2023.',
@@ -1251,7 +1310,7 @@ function renderHome(){
     '<div class="grain"></div><div class="vignette"></div>' +
     '<div class="hero-inner">' +
       '<div class="kicker"><span class="line"></span><span class="eyebrow">a digital mehfil</span></div>' +
-      '<h1 class="h-hero">lafzon ki<br>duniya</h1>' +
+      '<h1 class="h-hero">Awaargii</h1><div class="scripts"><span class="hi" lang="hi">आवारगी</span><span class="ur urdu" lang="ur">آوارگی</span></div>' +
       '<div class="urdu-line urdu">\u062c\u06c1\u0627\u06BA \u0644\u0641\u0638 \u0622\u0648\u0627\u0632 \u0628\u0646 \u062C\u0627\u062A\u06D2 \u06C1\u06CC\u06BA</div>' +
       '<p class="lede">Four voices, recorded and recited across half a century of Urdu literature \u2014 Faiz, Faraz, Jaun Elia and Zia Mohyeddin \u2014 gathered into one quiet room for late-night listening.</p>' +
       '<div class="hero-cta">' +
@@ -1261,7 +1320,7 @@ function renderHome(){
     '</div>' +
   '</section>' +
   '<section class="block"><div class="wrap">' +
-    '<div class="section-head"><h2 class="h-2">Four voices</h2></div>' +
+    '<div class="section-head"><h2 class="h-2">Four voices</h2><a class="more" data-action="goto" data-route="poets">about the poets</a></div>' +
     '<div class="poet-grid">' + POETS.map(poetCardMarkup).join('') + '</div>' +
   '</div></section>';
 
@@ -1288,7 +1347,7 @@ function renderHome(){
 /* ============================================================
    PAGE: poet detail
    ============================================================ */
-function renderPoet(slug){
+function renderPoet(slug, tab){
   var poet = POET_BY_SLUG[slug];
   if(!poet) return stateBlock({title:'Poet not found', body:'That page doesn\u2019t exist in this archive.'});
   var items = App.library[slug] || [];
@@ -1318,8 +1377,55 @@ function renderPoet(slug){
     '</div>' +
   '</div>' +
   '<div class="wrap" style="padding-top:34px;">' +
-    '<div class="tab-row"><button class="active">Recordings</button></div>' +
-    body +
+    '<div class="tab-row">' +
+      '<button class="'+(tab==='read'?'':'active')+'" data-action="goto" data-route="poet" data-slug="'+slug+'">Recordings</button>' +
+      '<button class="'+(tab==='read'?'active':'')+'" data-action="goto" data-route="poet" data-slug="'+slug+'" data-filter="read">'+(poet.reciter?'On Rekhta':'Poetry in writing')+'</button>' +
+    '</div>' +
+    (tab==='read' ? readPanel(poet) : body) +
+  '</div>';
+}
+
+/* ============================================================
+   PAGE: poets index + written-poetry panel
+   ============================================================ */
+function fact(k, v){ return '<dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd>'; }
+function poetEntryMarkup(poet){
+  var n = (App.library[poet.slug]||[]).length;
+  var listen = n ? 'Listen to '+n+(n===1?' recording':' recordings') : 'Open recordings';
+  return '<article class="poet-entry">' +
+    '<div class="pe-plate" data-action="open-poet" data-slug="'+poet.slug+'">'+plateMarkup(poet)+'</div>' +
+    '<div class="pe-body">' +
+      '<h2 class="h-1 pe-name">'+esc(poet.name)+'</h2>' +
+      '<div class="name-ur urdu pe-ur">'+esc(poet.nameUrdu)+'</div>' +
+      '<div class="years">'+esc(poet.years)+'</div>' +
+      '<p class="pe-short">'+esc(poet.short)+'</p>' +
+      '<dl class="facts">' + fact('Born',poet.born) + fact('Died',poet.died) + fact('Known for',poet.known) + fact(poet.reciter?'Books':'Collections', poet.collections.join(', ')) + '</dl>' +
+      '<div class="pe-actions">' +
+        '<button class="btn primary" data-action="open-poet" data-slug="'+poet.slug+'">'+listen+'</button>' +
+        '<button class="btn" data-action="goto" data-route="poet" data-slug="'+poet.slug+'" data-filter="read">'+(poet.reciter?'Recitations on Rekhta':'Read the poetry')+'</button>' +
+      '</div>' +
+    '</div>' +
+  '</article>';
+}
+function renderPoets(){
+  return '<div class="wrap" style="padding-top:44px;">' +
+    '<div class="section-head"><h1 class="h-1">The four voices</h1></div>' +
+    '<p class="dim" style="max-width:60ch;margin:0 0 8px;">Three poets and one reciter. Each has the recordings gathered here and a way into the written poetry.</p>' +
+    '<div class="poets-index">' + POETS.map(poetEntryMarkup).join('') + '</div>' +
+  '</div>';
+}
+function readPanel(poet){
+  var lead = poet.reciter
+    ? esc(poet.name)+' is remembered as a reciter rather than a writer of verse, so there is no body of his own poetry to read. Rekhta hosts videos of his recitations, and the recordings in this archive are on the Recordings tab.'
+    : esc(poet.name)+'\u2019s poems remain under copyright, so they are not reproduced in this app. Rekhta presents them in full, in Urdu, Hindi and Roman script, and the links below open there in a new tab.';
+  var links = poet.rekhta.map(function(l){
+    return '<a class="read-link" href="'+esc(l.url)+'" target="_blank" rel="noopener noreferrer"><span class="rl-label">'+esc(l.label)+'</span><span class="rl-host">rekhta.org</span></a>';
+  }).join('');
+  return '<div class="read-panel">' +
+    '<p class="read-lead">'+lead+'</p>' +
+    '<div class="read-links">'+links+'</div>' +
+    '<h3 class="h-3" style="margin:34px 0 12px;">'+(poet.reciter?'Books':'Collections')+'</h3>' +
+    '<ul class="collections">'+poet.collections.map(function(c){ return '<li>'+esc(c)+'</li>'; }).join('')+'</ul>' +
   '</div>';
 }
 
@@ -1399,12 +1505,13 @@ function renderNav(){
   return '' +
   '<nav class="topnav">' +
     '<a class="brand" href="#/home" data-action="goto" data-route="home">' +
-      '<span class="brand-en">lafzon ki duniya</span>' +
-      '<span class="brand-ur urdu">\u0644\u0641\u0638\u0648\u06BA</span>' +
+      '<span class="brand-en">Awaargii</span>' +
+      '<span class="brand-hi" lang="hi">आवारगी</span>' +
+      '<span class="brand-ur urdu" lang="ur">آوارگی</span>' +
     '</a>' +
     '<div class="navlinks">' +
       '<a class="'+(r==='home'?'active':'')+' nav-text" data-action="goto" data-route="home">Home</a>' +
-      '<a class="'+(r==='poet'?'active':'')+' nav-text" data-action="goto" data-route="poet" data-slug="'+POETS[0].slug+'">Poets</a>' +
+      '<a class="'+(r==='poets'||r==='poet'?'active':'')+' nav-text" data-action="goto" data-route="poets">Poets</a>' +
       '<a class="'+(r==='library'?'active':'')+' nav-text" data-action="goto" data-route="library">Library</a>' +
       '<a class="'+(r==='library'&&App.routeParam==='favorites'?'active':'')+' nav-text" data-action="goto" data-route="library" data-filter="favorites">Favorites</a>' +
       '<button class="icon-btn" data-action="goto" data-route="search" title="Search" aria-label="Search">'+ICON.search+'</button>' +
@@ -1433,7 +1540,8 @@ function renderRoute(){
   if(h.route==='setup'){ location.hash = '#/home'; return; }
 
   var mainHtml;
-  if(h.route==='poet'){ mainHtml = renderPoet(h.param); }
+  if(h.route==='poets'){ mainHtml = renderPoets(); }
+  else if(h.route==='poet'){ mainHtml = renderPoet(h.param, h.query.tab); }
   else if(h.route==='library'){ mainHtml = renderLibrary(h.query.filter || h.param); }
   else if(h.route==='search'){ mainHtml = renderSearch(h.query.q || h.param); }
   else { mainHtml = renderHome(); App.route='home'; }
@@ -1536,7 +1644,7 @@ function bindStaticControls(){
    ============================================================ */
 function routeHashFor(route, slug, filter){
   var hash = '#/'+route;
-  if(route==='poet' && slug) hash += '/'+encodeURIComponent(slug);
+  if(route==='poet' && slug){ hash += '/'+encodeURIComponent(slug); if(filter) hash += '?tab='+encodeURIComponent(filter); }
   if(route==='library' && filter) hash += '?filter='+encodeURIComponent(filter);
   return hash;
 }
