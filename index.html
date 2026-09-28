@@ -354,8 +354,11 @@ section.block + section.block{ border-top:1px solid var(--rule); }
 .immersive-close{ position:absolute; top:22px; left:22px; z-index:5; }
 .immersive-content{
   position:relative; z-index:2; height:100%; display:flex; flex-direction:column; align-items:center;
-  justify-content:center; padding:70px 20px 40px; text-align:center;
+  justify-content:flex-start; padding:70px 20px 48px; text-align:center;
+  overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
 }
+.immersive-content::before, .immersive-content::after{ content:""; flex:1 0 0; }
+.immersive-content > *{ flex-shrink:0; }
 .immersive .art{
   width:min(280px,58vw); aspect-ratio:1/1; margin-bottom:34px; position:relative;
   border:1px solid rgba(236,226,201,0.15); background:#0e0c09;
@@ -379,10 +382,6 @@ section.block + section.block{ border-top:1px solid var(--rule); }
 .immersive .video-slot{ width:min(480px,92vw); aspect-ratio:16/9; min-height:200px; margin-bottom:26px; position:relative; background:#0e0c09; }
 .immersive .video-slot .art-fallback{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:.5; }
 .immersive .video-slot .yt-reel-window, .immersive .video-slot .corner-frame{ display:none; }
-.yt-link{ display:inline-flex; flex-wrap:wrap; justify-content:center; gap:6px 10px; margin:-14px 0 24px; padding:8px 16px; border:1px solid var(--gold-soft); border-radius:999px; font-size:.78rem; letter-spacing:.06em; color:var(--parchment-dim); max-width:92vw; transition:all .3s var(--ease); }
-.yt-link b{ font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--gold); }
-.yt-link:hover{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
-.yt-link:hover b{ color:var(--ink); }
 
 .yt-reel-window::after{ content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 10px 4px rgba(0,0,0,0.6); pointer-events:none; }
 
@@ -555,7 +554,6 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
     <div class="track-poet" id="immPoet">—</div>
     <h2 id="immTitle">—</h2>
     <div class="track-collection" id="immCollection"></div>
-    <a class="yt-link" id="immYt" href="#" target="_blank" rel="noopener noreferrer"><b>Watch on YouTube</b><span id="immYtUrl"></span></a>
 
     <div class="progress-row">
       <time id="immCur">0:00</time>
@@ -1364,7 +1362,6 @@ var Player = {
     $('#immPoet').textContent = r.poetName;
     $('#immTitle').textContent = r.title;
     $('#immCollection').textContent = r.collection || '';
-    if(r.videoId){ var yu='https://www.youtube.com/watch?v='+r.videoId; $('#immYt').href=yu; $('#immYtUrl').textContent='youtube.com/watch?v='+r.videoId; }
     $('#aboutPanel').innerHTML = '<div><strong class="dim">Poet:</strong> '+esc(r.poetName)+'</div>'+
       '<div><strong class="dim">Source:</strong> '+esc('Awaargii')+'</div>'+
       '<div><strong class="dim">Recording:</strong> '+esc(r.title)+'</div>';
@@ -1710,18 +1707,20 @@ function renderRoute(){
 function showMiniPlayer(){ $('#miniPlayer').classList.add('show'); }
 var placeTimer = null;
 function placeVideo(){
-  var host = $('#yt-host'), slot = $('#videoSlot');
+  var host = $('#yt-host'), slot = $('#videoSlot'), box = document.querySelector('.immersive-content');
   if(!host || !slot || !$('#immersive').classList.contains('show')){ return; }
-  var r = slot.getBoundingClientRect();
+  var r = slot.getBoundingClientRect(), c = box.getBoundingClientRect();
   host.classList.add('live');
   host.style.left = r.left+'px'; host.style.top = r.top+'px';
   host.style.width = r.width+'px'; host.style.height = r.height+'px';
   host.style.right = 'auto'; host.style.bottom = 'auto';
+  var top = Math.max(0, Math.max(c.top, 64) - r.top), bottom = Math.max(0, r.bottom - c.bottom);
+  host.style.clipPath = (top||bottom) ? 'inset('+top+'px 0 '+bottom+'px 0)' : 'none';
 }
 function unplaceVideo(){
   var host = $('#yt-host'); if(!host) return;
   host.classList.remove('live');
-  host.style.left = host.style.top = host.style.width = host.style.height = host.style.right = host.style.bottom = '';
+  host.style.left = host.style.top = host.style.width = host.style.height = host.style.right = host.style.bottom = host.style.clipPath = '';
 }
 function openImmersive(){
   $('#immersive').classList.add('show'); document.body.style.overflow='hidden';
@@ -1733,6 +1732,7 @@ function closeImmersive(){
   clearInterval(placeTimer); unplaceVideo();
 }
 window.addEventListener('resize', placeVideo);
+(function(){ var bx=document.querySelector('.immersive-content'); if(bx) bx.addEventListener('scroll', placeVideo, {passive:true}); })();
 function openQueue(){ $('#queueDrawer').classList.add('show'); $('#scrimOverlay').classList.add('show'); renderQueueDrawer(); }
 function closeQueue(){ $('#queueDrawer').classList.remove('show'); $('#scrimOverlay').classList.remove('show'); }
 
