@@ -493,6 +493,18 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
 }
 
 /* ---- poetry reader, credit ---- */
+.credit{ display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; padding:56px 20px 44px; margin-top:48px; border-top:1px solid var(--rule); background:radial-gradient(ellipse 50% 90% at 50% 100%, rgba(173,139,82,0.07), transparent 70%); }
+.cr-orn{ display:flex; align-items:center; gap:14px; color:var(--gold); margin-bottom:10px; }
+.cr-orn span{ width:48px; height:1px; background:linear-gradient(90deg, transparent, var(--gold-soft)); }
+.cr-orn span:last-child{ transform:scaleX(-1); }
+.cr-orn i{ font-style:normal; font-size:1.15rem; line-height:1; }
+.cr-small{ font-family:var(--font-display); font-style:italic; font-size:.95rem; letter-spacing:.06em; color:var(--parchment-faint); }
+.cr-name{ font-family:var(--font-display); font-style:italic; font-weight:500; font-size:clamp(1.7rem,4.2vw,2.3rem); line-height:1.15; color:var(--gold); transition:color .3s var(--ease), letter-spacing .4s var(--ease); }
+.cr-name:hover{ color:var(--parchment); letter-spacing:.02em; }
+.cr-follow{ margin-top:14px; display:inline-flex; align-items:center; gap:9px; padding:9px 20px; border:1px solid var(--gold-soft); border-radius:999px; font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--parchment-dim); transition:all .3s var(--ease); }
+.cr-follow svg{ width:16px; height:16px; }
+.cr-follow:hover{ background:var(--gold); border-color:var(--gold); color:var(--ink); }
+
 @media (max-width:980px){ .poem-list{ list-style:none; margin:22px 0 0; padding:0; max-width:640px; }
 .poem-list li{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 4px; border-bottom:1px solid var(--rule); cursor:pointer; font-family:var(--font-display); font-size:1.15rem; }
 .poem-list li:hover{ color:var(--gold); }
@@ -504,11 +516,6 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
 .poem-form input,.poem-form textarea{ width:100%; background:var(--surface); border:1px solid var(--rule-2); color:var(--parchment); font-family:var(--font-body); font-size:.95rem; padding:12px 14px; margin:0 0 10px; }
 .poem-form textarea{ min-height:180px; }
 .poem-note{ color:var(--parchment-faint); font-size:.82rem; max-width:62ch; }
-.credit{ text-align:center; padding:46px 20px 30px; border-top:1px solid var(--rule); margin-top:40px; color:var(--parchment-faint); font-size:.86rem; }
-.credit a.ig{ color:var(--parchment); border-bottom:1px solid var(--gold-soft); }
-.credit a.ig:hover{ color:var(--gold); }
-.credit .btn{ margin-top:14px; }
-.credit .ph{ display:block; margin-top:12px; font-size:.72rem; }
 
 .plate img.pp{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:grayscale(0.55) sepia(0.22) contrast(1.05) brightness(0.88); transition:filter .5s var(--ease), transform .6s var(--ease); }
 .poet-card:hover .plate img.pp, .pe-plate:hover .plate img.pp{ filter:grayscale(0.15) sepia(0.25) contrast(1.06) brightness(1); transform:scale(1.035); }
@@ -637,15 +644,6 @@ var ICON = {
    Only the id you supplied are used — nothing invented. Add more
    sources later (e.g. once you have playlists for Jaun Elia) by
    extending this array; the app re-syncs automatically. */
-function rekhtaSet(base){
-  return [
-    {label:'All writings', url:base},
-    {label:'Ghazals', url:base+'/ghazals'},
-    {label:'Nazms', url:base+'/nazms'},
-    {label:'Couplets', url:base+'/couplets'},
-    {label:'Videos', url:base+'/video'}
-  ];
-}
 var POETS = [
   {
     slug:'faiz-ahmed-faiz',
@@ -654,7 +652,6 @@ var POETS = [
     years:'1911 – 1984',
     born:'Kala Qadir, Punjab (then Sialkot district)', died:'Lahore', known:'Ghazal and nazm; love poetry sharpened into protest',
     collections:['Naqsh-e-Faryadi','Dast-e-Saba','Zindan-Nama','Dast-e-Tah-e-Sang'],
-    rekhta:rekhtaSet('https://www.rekhta.org/poets/faiz-ahmad-faiz'),
     initial:'ف',
     short:'The most widely read Urdu poet of the twentieth century, who set romance and revolution in the same breath.',
     bio:'Born in Sialkot in 1911, Faiz studied Arabic and English literature in Lahore before joining the British Indian Army and, later, the Progressive Writers\u2019 Movement. His verse fused the classical ghazal with the language of justice and resistance, a combination that brought him prison sentences under the Rawalpindi Conspiracy Case and years of exile, yet made him the best-selling Urdu poet in both India and Pakistan. In 1962 he became the first Asian awarded the Lenin Peace Prize. He died in Lahore in 1984.',
@@ -667,7 +664,6 @@ var POETS = [
     years:'1931 – 2008',
     born:'Kohat, North-West Frontier', died:'Islamabad', known:'Ghazal; romantic and openly political verse',
     collections:['Tanha Tanha','Dard Aashob','Jaanan Jaanan','Be-Awaz Gali Kuchon Mein','Shab-e-Khoon','Nayaft'],
-    rekhta:rekhtaSet('https://www.rekhta.org/poets/ahmad-faraz'),
     initial:'ف',
     short:'The great romantic voice of modern Urdu ghazal, as at home in resistance as in longing.',
     bio:'Born Syed Ahmad Shah in Kohat in 1931, Faraz studied Urdu and Persian literature before becoming a lecturer and, later, the founding director-general of the Pakistan Academy of Letters. His ghazals \u2014 lyrical, direct, endlessly quotable \u2014 made him one of the most recited poets of his generation, even as his open defiance of military rule cost him state honours he chose to return. He died in Islamabad in 2008.',
@@ -680,7 +676,6 @@ var POETS = [
     years:'1931 – 2002',
     born:'Amroha, United Provinces', died:'Karachi', known:'Ghazal; love, loss, philosophy and irony',
     collections:['Shayad','Yaani','Gumaan','Lekin','Goya','Farnood'],
-    rekhta:rekhtaSet('https://www.rekhta.org/poets/jaun-eliya'),
     initial:'ج',
     short:'A philosopher-poet of loss and nihilism, whose diaries of despair became some of Urdu\u2019s most intimate ghazals.',
     bio:'Born Syed Sibt-e-Asghar Naqvi in Amroha in 1931, into a family of scholars, Jaun Elia was fluent in Arabic, Persian, Sanskrit and Hebrew before he was out of his teens. He migrated to Karachi in 1957 and spent decades writing poetry he was reluctant to publish \u2014 his first collection, Shayad, appeared only in 1991. Melancholic, self-lacerating and quietly funny, his ghazals of unfulfilled love and existential doubt have made him one of the most quoted poets among younger readers today. He died in Karachi in 2002.',
@@ -693,7 +688,6 @@ var POETS = [
     years:'1931 – 2023', reciter:true,
     born:'Lyallpur (now Faisalabad), Punjab', died:'Karachi', known:'Recitation of Urdu poetry and prose; stage, film and television',
     collections:['A Carrot Is a Carrot (2008)','Theatrics (2012)','The God of My Idolatry (2016)'],
-    rekhta:[{label:'Recitation videos', url:'https://www.rekhta.org/poets/zia-mohyeddin/video'}],
     initial:'ض',
     short:'Not a poet but Urdu\u2019s definitive voice \u2014 the reciter who taught generations how a ghazal should sound aloud.',
     bio:'Born in Lyallpur (now Faisalabad) in 1931, Zia Mohyeddin trained at RADA in London and built a stage and film career that ran from the West End premiere of A Passage to India to Lawrence of Arabia. In Pakistan he became something rarer: the actor whose recitations of Ghalib, Faiz and Iqbal defined how an entire country heard its own poetry, most famously through decades of live \u201cnashist\u201d recitation evenings. He founded and led the National Academy of Performing Arts in Karachi until his death in 2023.',
@@ -965,8 +959,16 @@ function playlistRaw(listId){
   return firstOk(tasks).catch(function(){ return playlistViaProbe(listId); });
 }
 
+/* channel names are never shown; everything is credited to Awaargii */
+var CHANNEL_RE = /spin\s*ace(\s*tennis)?|tennis\s*khursheed|khursheed\s*abdullah|jamal\s*roomi|rekhta/gi;
+function scrubRec(r){
+  if(!r) return r;
+  if(r.title) r.title = r.title.replace(CHANNEL_RE,'').replace(/\s*[|\-\u2013\u2014:]\s*(?=[|\-\u2013\u2014:]|$)/g,'').replace(/^\s*[|\-\u2013\u2014:]\s*/,'').replace(/\s{2,}/g,' ').trim() || '(untitled recording)';
+  r.collection = 'Awaargii';
+  return r;
+}
 function toRec(poet, raw, i){
-  return {
+  return scrubRec({
     id: poet.slug + ':' + raw.videoId,
     videoId: raw.videoId,
     title: raw.title || '(untitled recording)',
@@ -974,17 +976,17 @@ function toRec(poet, raw, i){
     poetName: poet.name,
     thumbnail: 'https://i.ytimg.com/vi/' + raw.videoId + '/hqdefault.jpg',
     position: i,
-    collection: raw.author || '',
+    collection: 'Awaargii',
     duration: raw.duration || 0,
     embeddable: true,
     unavailable: false
-  };
+  });
 }
 
 function loadPoetRecordings(poet, force){
   if(!force){
     var cached = Store.getCached(poet.slug);
-    if(cached){ App.library[poet.slug] = cached.items; return Promise.resolve(cached.items); }
+    if(cached){ cached.items.forEach(scrubRec); App.library[poet.slug] = cached.items; return Promise.resolve(cached.items); }
   }
   App.loadingPoets[poet.slug] = true;
   App.errors[poet.slug] = null;
@@ -1275,7 +1277,7 @@ var Player = {
     $('#immTitle').textContent = r.title;
     $('#immCollection').textContent = r.collection || '';
     $('#aboutPanel').innerHTML = '<div><strong class="dim">Poet:</strong> '+esc(r.poetName)+'</div>'+
-      '<div><strong class="dim">Source:</strong> '+esc(r.collection||'YouTube')+'</div>'+
+      '<div><strong class="dim">Source:</strong> '+esc('Awaargii')+'</div>'+
       '<div><strong class="dim">Recording:</strong> '+esc(r.title)+'</div>';
     $('#rateLabel').textContent = Store.rate.toFixed(2).replace(/0$/,'').replace(/\.$/,'.0') + '\u00d7';
     $('#volSlider').value = Store.volume;
@@ -1617,7 +1619,7 @@ function parseHash(){
   return { route:route, param: param, query: query };
 }
 
-var CREDIT = '<footer class="credit">Made by <a class="ig" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">@md.ismaiiil</a><br><a class="btn small" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">Follow on Instagram</a></footer>';
+var CREDIT = '<footer class="credit"><div class="cr-orn"><span></span><i>\u2766</i><span></span></div><div class="cr-small">crafted with love by</div><a class="cr-name" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">@md.ismaiiil</a><a class="cr-follow" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".6" fill="currentColor"/></svg><span>Follow on Instagram</span></a></footer>';
 function renderRoute(){
   var h = parseHash();
   if(App.route!==h.route || App.routeParam!==h.param || h.query.tab!==App.lastTab){ if(!App._keepPoem) App.poemIdx = null; }
@@ -1844,6 +1846,7 @@ function restoreQueueIfAny(){
 }
 
 function init(){
+  try{ Object.keys(Store.recDb||{}).forEach(function(k){ scrubRec(Store.recDb[k]); }); (Player.queue||[]).forEach(scrubRec); Store.saveQueue&&Store.saveQueue(); }catch(e){}
   bindStaticControls();
   if(window.__ytApiReady || (window.YT && window.YT.Player)) ytInit();
   window.addEventListener('hashchange', function(){ document.documentElement.classList.remove('no-anim'); renderRoute(); });
