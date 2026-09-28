@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>lafzon ki duniya — an archive of Urdu poetry</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🪶</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   lafzon ki duniya — design tokens
+   ============================================================ */
+:root{
+  --ink:        #14110d;
+  --ink-2:      #1c1811;
+  --surface:    #221d16;
+  --surface-2:  #2a241b;
+  --rule:       rgba(233,223,200,0.10);
+  --rule-2:     rgba(233,223,200,0.18);
+  --parchment:  #ece2c9;
+  --parchment-dim: #b8ac8d;
+  --parchment-faint: #7d7460;
+  --burgundy:   #7a2e30;
+  --burgundy-lt:#9c4548;
+  --olive:      #5c5f40;
+  --gold:       #ad8b52;
+  --gold-soft:  rgba(173,139,82,0.5);
+  --shadow-deep: rgba(0,0,0,0.55);
+
+  --font-display: 'Cormorant Garamond', 'Noto Nastaliq Urdu', serif;
+  --font-body: 'Lora', 'Noto Nastaliq Urdu', serif;
+  --font-urdu: 'Noto Nastaliq Urdu', serif;
+
+  --nav-h: 64px;
+  --mini-h: 76px;
+  --radius: 3px;
+  --ease: cubic-bezier(.22,.61,.36,1);
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--parchment);
+  font-family:var(--font-body);
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+button{ font-family:inherit; }
+::selection{ background:var(--burgundy); color:var(--parchment); }
+
+/* focus visibility */
+:focus-visible{ outline:1px solid var(--gold); outline-offset:3px; }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+}
+
+/* film-grain + paper texture, used as an overlay on dark surfaces */
+.grain{
+  pointer-events:none;
+  position:absolute; inset:0;
+  opacity:0.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+.vignette{
+  pointer-events:none;
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.55) 100%);
+}
+
+/* ---------- scrollbars, subtle ---------- */
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:var(--surface-2); border-radius:4px; }
+::-webkit-scrollbar-track{ background:transparent; }
+
+/* ---------- type scale ---------- */
+.h-hero{ font-family:var(--font-display); font-weight:500; font-size:clamp(2.6rem,7vw,5.2rem); line-height:1.02; letter-spacing:0.005em; color:var(--parchment); }
+.h-1{ font-family:var(--font-display); font-weight:500; font-size:clamp(1.9rem,3.6vw,2.7rem); line-height:1.15; color:var(--parchment); }
+.h-2{ font-family:var(--font-display); font-weight:500; font-size:1.5rem; line-height:1.25; color:var(--parchment); }
+.h-3{ font-family:var(--font-display); font-weight:600; font-size:1.15rem; letter-spacing:0.01em; color:var(--parchment); }
+.eyebrow{ font-family:var(--font-body); font-size:0.78rem; letter-spacing:0.14em; color:var(--parchment-faint); text-transform:none; }
+.urdu{ font-family:var(--font-urdu); direction:rtl; }
+.dim{ color:var(--parchment-dim); }
+.faint{ color:var(--parchment-faint); }
+
+/* ============================================================
+   app shell / nav
+   ============================================================ */
+#app{ min-height:100%; padding-bottom:var(--mini-h); }
+.topnav{
+  position:fixed; top:0; left:0; right:0; height:var(--nav-h);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 clamp(18px,4vw,48px);
+  background:linear-gradient(to bottom, rgba(20,17,13,0.96), rgba(20,17,13,0.78));
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--rule);
+  z-index:200;
+}
+.topnav .brand{ display:flex; align-items:baseline; gap:10px; }
+.topnav .brand-en{ font-family:var(--font-display); font-size:1.3rem; font-weight:600; letter-spacing:0.01em; }
+.topnav .brand-ur{ font-family:var(--font-urdu); font-size:1.05rem; color:var(--parchment-dim); }
+.navlinks{ display:flex; align-items:center; gap:clamp(14px,2.4vw,32px); }
+.navlinks a{ font-size:0.92rem; color:var(--parchment-dim); position:relative; padding:6px 0; transition:color .3s var(--ease); }
+.navlinks a:hover, .navlinks a.active{ color:var(--parchment); }
+.navlinks a.active::after{ content:""; position:absolute; left:0; right:0; bottom:-2px; height:1px; background:var(--gold); }
+.icon-btn{ background:none; border:1px solid transparent; color:var(--parchment-dim); cursor:pointer; padding:8px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:color .25s, border-color .25s, background .25s; }
+.icon-btn:hover{ color:var(--parchment); border-color:var(--rule-2); background:rgba(255,255,255,0.03); }
+.icon-btn svg{ width:19px; height:19px; }
+.navlinks-mobile{ display:none; }
+
+main.page{ padding-top:var(--nav-h); min-height:100%; animation:fadeIn .5s var(--ease); }
+.no-anim main.page{ animation:none; }
+.notice{ border:1px solid var(--rule-2); background:var(--surface); color:var(--parchment-dim); font-size:0.84rem; padding:12px 16px; margin-top:28px; }
+@keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:none; } }
+
+.wrap{ max-width:1180px; margin:0 auto; padding:0 clamp(18px,4vw,48px); }
+
+/* section headers */
+.section-head{ display:flex; align-items:baseline; justify-content:space-between; margin:0 0 22px; }
+.section-head .h-2{ margin:0; }
+.section-head a.more{ font-size:0.82rem; color:var(--parchment-faint); border-bottom:1px solid var(--rule-2); padding-bottom:1px; }
+.section-head a.more:hover{ color:var(--gold); border-color:var(--gold-soft); }
+section.block{ padding:56px 0; }
+section.block + section.block{ border-top:1px solid var(--rule); }
+
+/* ============================================================
+   HERO (home)
+   ============================================================ */
+.hero{
+  position:relative; min-height:78vh; display:flex; align-items:center;
+  overflow:hidden; border-bottom:1px solid var(--rule);
+  background:
+    radial-gradient(ellipse 60% 50% at 30% 20%, rgba(122,46,48,0.16), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 80% 85%, rgba(92,95,64,0.14), transparent 60%),
+    linear-gradient(180deg, #17140f 0%, #14110d 70%);
+}
+.hero::before{ /* paper fibre lines */
+  content:""; position:absolute; inset:0; opacity:0.5;
+  background-image:repeating-linear-gradient(90deg, rgba(233,223,200,0.02) 0px, transparent 1px 3px);
+}
+.hero-inner{ position:relative; z-index:2; padding:calc(var(--nav-h) + 40px) clamp(18px,4vw,48px) 60px; max-width:900px; }
+.hero .kicker{ display:flex; align-items:center; gap:10px; margin-bottom:22px; }
+.hero .kicker .line{ width:34px; height:1px; background:var(--gold-soft); }
+.hero h1{ margin:0 0 18px; }
+.hero .urdu-line{ font-size:clamp(1.1rem,2.4vw,1.5rem); color:var(--parchment-dim); margin:0 0 28px; }
+.hero p.lede{ max-width:52ch; color:var(--parchment-dim); font-size:1.02rem; margin:0 0 34px; }
+.hero-cta{ display:flex; gap:16px; flex-wrap:wrap; }
+
+.btn{
+  display:inline-flex; align-items:center; gap:10px; cursor:pointer;
+  font-family:var(--font-body); font-size:0.9rem; letter-spacing:0.02em;
+  padding:12px 22px; border-radius:2px; border:1px solid var(--rule-2);
+  background:transparent; color:var(--parchment); transition:all .3s var(--ease);
+}
+.btn:hover{ border-color:var(--gold-soft); color:var(--gold); }
+.btn.primary{ background:var(--burgundy); border-color:var(--burgundy); color:#f2e9d8; }
+.btn.primary:hover{ background:var(--burgundy-lt); border-color:var(--burgundy-lt); color:#fff; }
+.btn.small{ padding:8px 14px; font-size:0.82rem; }
+.btn:disabled{ opacity:0.45; cursor:not-allowed; }
+
+/* ============================================================
+   POET CARDS (archival plates)
+   ============================================================ */
+.poet-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:22px; }
+.poet-card{
+  position:relative; background:var(--surface); border:1px solid var(--rule);
+  cursor:pointer; transition:transform .4s var(--ease), border-color .4s var(--ease);
+}
+.poet-card:hover{ transform:translateY(-4px); border-color:var(--rule-2); }
+.poet-card .plate{
+  position:relative; aspect-ratio:3/4; overflow:hidden; background:#0e0c09;
+}
+.poet-card .plate img{ width:100%; height:100%; object-fit:cover; filter:grayscale(0.55) sepia(0.22) contrast(1.05) brightness(0.85); transition:filter .5s var(--ease), transform .6s var(--ease); }
+.poet-card:hover .plate img{ filter:grayscale(0.25) sepia(0.28) contrast(1.08) brightness(0.95); transform:scale(1.035); }
+.poet-card .plate::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 40px 8px rgba(0,0,0,0.55); }
+.plate.no-photo{ display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 32% 22%, rgba(173,139,82,0.12), transparent 62%), linear-gradient(165deg, #241f17 0%, #14110d 78%); }
+.plate.no-photo .plate-initial{ font-family:var(--font-urdu); font-size:6.4rem; line-height:1; color:rgba(236,226,201,0.13); user-select:none; }
+.poet-banner .bg.no-photo{ background:radial-gradient(ellipse at 30% 15%, rgba(122,46,48,0.22), transparent 55%), radial-gradient(ellipse at 80% 90%, rgba(92,95,64,0.18), transparent 55%), #0f0d0a; }
+.poet-card .plate-num{ position:absolute; top:10px; left:10px; font-family:var(--font-display); font-size:0.78rem; color:var(--parchment-dim); background:rgba(20,17,13,0.65); padding:2px 8px; border:1px solid var(--rule-2); z-index:2; }
+.poet-card .info{ padding:16px 16px 18px; border-top:1px solid var(--rule); }
+.poet-card .name-en{ font-family:var(--font-display); font-size:1.28rem; font-weight:600; margin:0 0 2px; }
+.poet-card .name-ur{ font-family:var(--font-urdu); font-size:1rem; color:var(--parchment-dim); margin:0 0 10px; }
+.poet-card .desc{ font-size:0.83rem; color:var(--parchment-faint); margin:0 0 10px; line-height:1.5; }
+.poet-card .meta{ font-size:0.76rem; color:var(--parchment-faint); display:flex; justify-content:space-between; border-top:1px solid var(--rule); padding-top:10px; }
+
+/* ============================================================
+   HORIZONTAL RAILS (recently heard / featured)
+   ============================================================ */
+.rail{ display:flex; gap:16px; overflow-x:auto; padding:2px 2px 14px; scroll-snap-type:x proximity; }
+.rail::-webkit-scrollbar{ height:6px; }
+.rail-card{ flex:0 0 200px; scroll-snap-align:start; cursor:pointer; }
+.rail-card .thumb{ position:relative; aspect-ratio:16/10; overflow:hidden; background:#0e0c09; border:1px solid var(--rule); }
+.rail-card .thumb img{ width:100%; height:100%; object-fit:cover; filter:grayscale(0.35) sepia(0.18) brightness(0.82); transition:filter .4s, transform .5s var(--ease); }
+.rail-card:hover .thumb img{ filter:grayscale(0.1) brightness(0.95); transform:scale(1.04); }
+.rail-card .thumb .play-ring{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  opacity:0; transition:opacity .25s;
+}
+.rail-card:hover .thumb .play-ring{ opacity:1; }
+.rail-card .thumb .play-ring span{
+  width:38px; height:38px; border-radius:50%; border:1px solid rgba(236,226,201,0.8);
+  display:flex; align-items:center; justify-content:center; background:rgba(20,17,13,0.5);
+}
+.rail-card .title{ font-family:var(--font-body); font-size:0.88rem; margin:10px 0 2px; line-height:1.35;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.rail-card .poet{ font-size:0.76rem; color:var(--parchment-faint); }
+
+/* ============================================================
+   POET DETAIL PAGE
+   ============================================================ */
+.poet-banner{ position:relative; border-bottom:1px solid var(--rule); overflow:hidden; }
+.poet-banner .bg{ position:absolute; inset:0; background-size:cover; background-position:center 20%; filter:grayscale(0.5) sepia(0.25) brightness(0.4); transform:scale(1.05); }
+.poet-banner .scrim{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(20,17,13,0.55) 0%, rgba(20,17,13,0.88) 78%, var(--ink) 100%); }
+.poet-banner-inner{ position:relative; z-index:2; padding:70px clamp(18px,4vw,48px) 40px; max-width:1180px; margin:0 auto; }
+.poet-banner .name-ur{ font-family:var(--font-urdu); font-size:1.7rem; color:var(--parchment-dim); margin:0 0 4px; }
+.poet-banner .name-en{ margin:0 0 6px; }
+.poet-banner .years{ color:var(--parchment-faint); font-size:0.88rem; letter-spacing:0.03em; margin:0 0 20px; }
+.poet-banner .bio{ max-width:64ch; color:var(--parchment-dim); font-size:0.98rem; }
+.poet-banner .stat-row{ display:flex; gap:26px; margin-top:22px; }
+.poet-banner .stat{ font-size:0.8rem; color:var(--parchment-faint); }
+.poet-banner .stat b{ display:block; font-family:var(--font-display); font-size:1.3rem; color:var(--parchment); font-weight:600; }
+
+.tab-row{ display:flex; gap:26px; border-bottom:1px solid var(--rule); margin-bottom:6px; }
+.tab-row button{ background:none; border:none; color:var(--parchment-faint); padding:12px 2px; font-size:0.88rem; cursor:pointer; border-bottom:1px solid transparent; margin-bottom:-1px; transition:color .25s; }
+.tab-row button:hover{ color:var(--parchment); }
+.tab-row button.active{ color:var(--parchment); border-color:var(--gold); }
+
+/* editorial numbered recording rows (order = real playlist order) */
+.rec-list{ list-style:none; margin:0; padding:8px 0; }
+.rec-row{
+  display:grid; grid-template-columns:40px 56px 1fr auto auto; align-items:center; gap:16px;
+  padding:11px 6px; border-bottom:1px solid var(--rule); cursor:pointer; transition:background .2s;
+}
+.rec-row:hover{ background:rgba(255,255,255,0.02); }
+.rec-row.playing{ background:rgba(122,46,48,0.12); }
+.rec-row .idx{ font-family:var(--font-display); font-size:0.95rem; color:var(--parchment-faint); text-align:right; }
+.rec-row.playing .idx{ color:var(--gold); }
+.rec-row .thumb-sm{ width:56px; height:38px; overflow:hidden; background:#0e0c09; position:relative; }
+.rec-row .thumb-sm img{ width:100%; height:100%; object-fit:cover; filter:grayscale(0.4) sepia(0.15) brightness(0.8); }
+.rec-row .r-title{ font-size:0.92rem; line-height:1.35; min-width:0; }
+.rec-row .r-title .eq{ display:inline-flex; gap:2px; margin-right:8px; vertical-align:middle; }
+.rec-row .r-title .eq span{ width:2px; height:9px; background:var(--gold); display:inline-block; animation:eq 0.9s ease-in-out infinite; }
+.rec-row .r-title .eq span:nth-child(2){ animation-delay:.15s; height:13px; }
+.rec-row .r-title .eq span:nth-child(3){ animation-delay:.3s; height:6px; }
+@keyframes eq{ 0%,100%{ transform:scaleY(0.5);} 50%{ transform:scaleY(1);} }
+.rec-row .r-dur{ font-size:0.8rem; color:var(--parchment-faint); font-variant-numeric:tabular-nums; }
+.rec-row .r-actions{ display:flex; gap:6px; opacity:0; transition:opacity .2s; }
+.rec-row:hover .r-actions, .rec-row.playing .r-actions{ opacity:1; }
+
+/* fav icon */
+.fav-btn{ background:none; border:none; cursor:pointer; color:var(--parchment-faint); padding:6px; display:flex; }
+.fav-btn:hover{ color:var(--gold); }
+.fav-btn.active{ color:var(--burgundy-lt); }
+.fav-btn svg{ width:16px; height:16px; }
+
+/* ============================================================
+   LIBRARY / SEARCH pages
+   ============================================================ */
+.filter-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:28px; }
+.chip{ font-size:0.82rem; padding:7px 15px; border:1px solid var(--rule-2); color:var(--parchment-dim); cursor:pointer; transition:all .25s; background:transparent; }
+.chip:hover{ color:var(--parchment); border-color:var(--gold-soft); }
+.chip.active{ background:var(--surface-2); color:var(--parchment); border-color:var(--gold-soft); }
+
+.search-box{ position:relative; margin-bottom:30px; }
+.search-box input{
+  width:100%; background:var(--surface); border:1px solid var(--rule-2); color:var(--parchment);
+  font-family:var(--font-body); font-size:1.05rem; padding:15px 18px 15px 46px;
+}
+.search-box input::placeholder{ color:var(--parchment-faint); }
+.search-box svg{ position:absolute; left:16px; top:50%; transform:translateY(-50%); width:18px; height:18px; color:var(--parchment-faint); }
+
+.grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:12px 24px; }
+
+/* generic empty/error/loading states */
+.state-block{ padding:70px 20px; text-align:center; color:var(--parchment-faint); }
+.state-block .h-2{ color:var(--parchment-dim); margin-bottom:10px; }
+.state-block p{ max-width:46ch; margin:0 auto; font-size:0.92rem; }
+.spinner{ width:22px; height:22px; border-radius:50%; border:1px solid var(--rule-2); border-top-color:var(--gold); animation:spin 0.9s linear infinite; margin:0 auto 16px; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+/* ============================================================
+   SETUP / ONBOARDING SCREEN
+   ============================================================ */
+.setup-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px 20px; position:relative; }
+.setup-card{ position:relative; z-index:2; max-width:480px; width:100%; background:var(--surface); border:1px solid var(--rule-2); padding:clamp(28px,5vw,44px); }
+.setup-card .h-1{ margin:0 0 12px; }
+.setup-card p{ color:var(--parchment-dim); font-size:0.92rem; margin:0 0 22px; }
+.setup-card ol{ color:var(--parchment-dim); font-size:0.86rem; padding-left:20px; margin:0 0 24px; }
+.setup-card ol li{ margin-bottom:8px; }
+.setup-card ol a{ color:var(--gold); border-bottom:1px solid var(--gold-soft); }
+.field{ margin-bottom:16px; }
+.field label{ display:block; font-size:0.78rem; color:var(--parchment-faint); margin-bottom:7px; letter-spacing:0.03em; }
+.field input{ width:100%; background:var(--ink-2); border:1px solid var(--rule-2); color:var(--parchment); padding:11px 13px; font-family:var(--font-body); font-size:0.92rem; }
+.field input:focus{ border-color:var(--gold-soft); }
+.setup-note{ font-size:0.78rem; color:var(--parchment-faint); margin-top:14px; }
+.setup-skip{ margin-top:18px; text-align:center; }
+.setup-skip button{ background:none; border:none; color:var(--parchment-faint); font-size:0.82rem; cursor:pointer; border-bottom:1px solid transparent; }
+.setup-skip button:hover{ color:var(--parchment-dim); border-color:var(--rule-2); }
+
+/* ============================================================
+   MINI PLAYER (persistent dock)
+   ============================================================ */
+.mini-player{
+  position:fixed; left:0; right:0; bottom:0; height:var(--mini-h); z-index:300;
+  background:linear-gradient(0deg, rgba(20,17,13,0.98), rgba(24,20,15,0.92));
+  border-top:1px solid var(--rule-2);
+  display:none; align-items:center; padding:0 clamp(12px,3vw,28px); gap:16px;
+  transform:translateY(100%); transition:transform .4s var(--ease);
+}
+.mini-player.show{ display:flex; transform:translateY(0); }
+.mini-player .mp-thumb{ width:52px; height:52px; overflow:hidden; flex:0 0 auto; background:#0e0c09; position:relative; cursor:pointer; }
+.mini-player .mp-thumb img{ width:100%; height:100%; object-fit:cover; filter:grayscale(0.3) sepia(0.15) brightness(0.85); }
+.mini-player .mp-meta{ min-width:0; flex:1 1 160px; cursor:pointer; }
+.mini-player .mp-title{ font-size:0.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mini-player .mp-poet{ font-size:0.76rem; color:var(--parchment-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mini-player .mp-controls{ display:flex; align-items:center; gap:6px; flex:0 0 auto; }
+.mini-player .mp-progress-wrap{ position:absolute; top:0; left:0; right:0; height:2px; background:rgba(255,255,255,0.06); }
+.mini-player .mp-progress{ height:100%; background:var(--gold); width:0%; }
+.mini-player .mp-time{ display:none; }
+.ctrl-btn{ background:none; border:none; color:var(--parchment-dim); cursor:pointer; padding:8px; display:flex; transition:color .2s, transform .15s; }
+.ctrl-btn:hover{ color:var(--parchment); }
+.ctrl-btn:active{ transform:scale(0.9); }
+.ctrl-btn.play-main{ color:var(--parchment); }
+.ctrl-btn svg{ width:19px; height:19px; }
+.ctrl-btn.big svg{ width:26px; height:26px; }
+
+/* ============================================================
+   IMMERSIVE / NOW-PLAYING OVERLAY
+   ============================================================ */
+.immersive{
+  position:fixed; inset:0; z-index:500; display:none;
+  background:var(--ink); color:var(--parchment);
+}
+.immersive.show{ display:block; }
+.immersive .bg-image{
+  position:absolute; inset:0; background-size:cover; background-position:center;
+  filter:blur(38px) saturate(0.7) brightness(0.42); transform:scale(1.2);
+  animation:slowpan 40s ease-in-out infinite alternate;
+}
+@keyframes slowpan{ from{ transform:scale(1.2) translate(0,0); } to{ transform:scale(1.28) translate(-1.5%,-1%); } }
+.immersive .bg-scrim{ position:absolute; inset:0; background:radial-gradient(ellipse at 50% 35%, rgba(20,17,13,0.35), rgba(15,12,9,0.86) 75%); }
+.immersive-close{ position:absolute; top:22px; left:22px; z-index:5; }
+.immersive-content{
+  position:relative; z-index:2; height:100%; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; padding:70px 20px 40px; text-align:center;
+}
+.immersive .art{
+  width:min(280px,58vw); aspect-ratio:1/1; margin-bottom:34px; position:relative;
+  border:1px solid rgba(236,226,201,0.15); background:#0e0c09;
+}
+.immersive .art img{ width:100%; height:100%; object-fit:cover; filter:grayscale(0.35) sepia(0.2) brightness(0.9); }
+.immersive .art .corner-frame{ position:absolute; inset:0; box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4), inset 0 0 30px 10px rgba(0,0,0,0.5); }
+/* decorative tape-reel; the real YouTube frame lives in #yt-host below */
+.yt-reel-window{
+  position:absolute; bottom:-14px; right:-14px; width:64px; height:64px; border-radius:50%;
+  border:2px solid var(--gold-soft); box-shadow:0 3px 14px rgba(0,0,0,0.6);
+  background:
+    radial-gradient(circle at center, var(--ink) 0 9px, transparent 10px),
+    repeating-radial-gradient(circle at center, #2a241b 0 2px, #171310 2px 4px);
+}
+.yt-reel-window.spin{ animation:reelspin 3.4s linear infinite; }
+@keyframes reelspin{ to{ transform:rotate(360deg); } }
+/* persistent host: always in the render tree so audio never pauses when overlays close */
+#yt-host{ position:fixed; right:6px; bottom:6px; width:64px; height:64px; overflow:hidden; opacity:0.02; pointer-events:none; z-index:1; }
+#yt-host iframe{ width:64px; height:64px; }
+.yt-reel-window::after{ content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 10px 4px rgba(0,0,0,0.6); pointer-events:none; }
+
+.immersive .track-poet{ font-size:0.86rem; letter-spacing:0.05em; color:var(--parchment-dim); margin-bottom:8px; }
+.immersive h2{ font-family:var(--font-display); font-weight:500; font-size:clamp(1.5rem,4vw,2.4rem); max-width:20ch; margin:0 0 10px; }
+.immersive .track-collection{ font-size:0.82rem; color:var(--parchment-faint); margin-bottom:30px; }
+
+.progress-row{ width:min(560px,90vw); display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+.progress-row time{ font-size:0.76rem; color:var(--parchment-faint); font-variant-numeric:tabular-nums; width:38px; }
+.progress-row time:last-child{ text-align:right; }
+.scrubber{ flex:1; position:relative; height:14px; display:flex; align-items:center; cursor:pointer; }
+.scrubber .track{ position:relative; width:100%; height:2px; background:rgba(255,255,255,0.14); }
+.scrubber .fill{ position:absolute; left:0; top:0; height:100%; background:var(--gold); width:0%; }
+.scrubber .knob{ position:absolute; top:50%; width:9px; height:9px; border-radius:50%; background:var(--parchment); transform:translate(-50%,-50%); left:0%; opacity:0; transition:opacity .2s; }
+.scrubber:hover .knob{ opacity:1; }
+
+.transport-row{ display:flex; align-items:center; gap:20px; margin-bottom:26px; }
+.transport-row .ctrl-btn.play-toggle{ width:52px; height:52px; border:1px solid var(--rule-2); border-radius:50%; display:flex; align-items:center; justify-content:center; }
+.transport-row .ctrl-btn.play-toggle:hover{ border-color:var(--gold-soft); }
+
+.secondary-row{ display:flex; align-items:center; gap:22px; }
+.secondary-row .rate-label{ font-size:0.78rem; color:var(--parchment-dim); min-width:34px; text-align:center; }
+.secondary-row .vol-wrap{ display:flex; align-items:center; gap:8px; width:110px; }
+.secondary-row .vol-wrap input[type=range]{ flex:1; }
+input[type=range]{ -webkit-appearance:none; appearance:none; height:2px; background:rgba(255,255,255,0.14); outline:none; }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:9px; height:9px; border-radius:50%; background:var(--parchment); cursor:pointer; }
+input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; background:var(--parchment); border:none; cursor:pointer; }
+
+.about-toggle{ margin-top:26px; font-size:0.78rem; color:var(--parchment-faint); border-bottom:1px solid var(--rule-2); padding-bottom:2px; cursor:pointer; background:none; border-top:none; border-left:none; border-right:none; }
+.about-panel{ max-width:520px; margin-top:14px; font-size:0.84rem; color:var(--parchment-dim); text-align:left; background:rgba(255,255,255,0.02); border:1px solid var(--rule); padding:14px 16px; display:none; }
+.about-panel.show{ display:block; }
+
+/* ============================================================
+   QUEUE DRAWER
+   ============================================================ */
+.queue-drawer{
+  position:fixed; top:0; right:0; bottom:0; width:min(380px,88vw); z-index:600;
+  background:var(--surface); border-left:1px solid var(--rule-2);
+  transform:translateX(100%); transition:transform .35s var(--ease);
+  display:flex; flex-direction:column;
+}
+.queue-drawer.show{ transform:translateX(0); }
+.queue-head{ display:flex; align-items:center; justify-content:space-between; padding:20px 20px 14px; border-bottom:1px solid var(--rule); }
+.queue-list{ flex:1; overflow-y:auto; padding:8px 10px; }
+.queue-item{ display:flex; align-items:center; gap:12px; padding:9px 8px; border-bottom:1px solid var(--rule); cursor:grab; }
+.queue-item.playing{ background:rgba(122,46,48,0.12); }
+.queue-item .qi-thumb{ width:44px; height:32px; background:#0e0c09; overflow:hidden; flex:0 0 auto; }
+.queue-item .qi-thumb img{ width:100%; height:100%; object-fit:cover; filter:grayscale(0.4) brightness(0.85); }
+.queue-item .qi-title{ font-size:0.82rem; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.queue-item .qi-remove{ background:none; border:none; color:var(--parchment-faint); cursor:pointer; padding:4px; }
+.queue-foot{ padding:14px 20px; border-top:1px solid var(--rule); }
+.scrim-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:590; display:none; }
+.scrim-overlay.show{ display:block; }
+
+.toast{ max-width:90vw; text-align:center; position:fixed; bottom:calc(var(--mini-h) + 18px); left:50%; transform:translateX(-50%) translateY(10px); background:var(--surface-2); border:1px solid var(--rule-2); color:var(--parchment); padding:11px 20px; font-size:0.85rem; z-index:700; opacity:0; pointer-events:none; transition:all .3s var(--ease); }
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:980px){
+  .poet-grid{ grid-template-columns:repeat(2,1fr); }
+  .grid-2{ grid-template-columns:1fr; }
+  .navlinks a.nav-text{ display:none; }
+}
+@media (max-width:700px){
+  .navlinks{ gap:10px; }
+  .poet-banner .stat-row{ gap:18px; }
+  .rec-row{ grid-template-columns:26px 44px 1fr auto; }
+  .rec-row .r-dur{ display:none; }
+  .mini-player .mp-time{ display:none; }
+  .transport-row{ gap:14px; }
+  .secondary-row{ gap:14px; flex-wrap:wrap; justify-content:center; }
+  section.block{ padding:40px 0; }
+}
+@media (max-width:520px){
+  .poet-grid{ grid-template-columns:1fr 1fr; gap:14px; }
+  .hero{ min-height:86vh; }
+  .rail-card{ flex-basis:150px; }
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- persistent mini player -->
+<div class="mini-player" id="miniPlayer">
+  <div class="mp-progress-wrap"><div class="mp-progress" id="mpProgress"></div></div>
+  <div class="mp-thumb" id="mpThumb"><img id="mpThumbImg" alt=""></div>
+  <div class="mp-meta" id="mpMeta">
+    <div class="mp-title" id="mpTitle">—</div>
+    <div class="mp-poet" id="mpPoet">—</div>
+  </div>
+  <div class="mp-controls">
+    <button class="ctrl-btn" id="mpPrev" title="Previous" aria-label="Previous"></button>
+    <button class="ctrl-btn play-main big" id="mpPlay" title="Play/Pause" aria-label="Play or pause"></button>
+    <button class="ctrl-btn" id="mpNext" title="Next" aria-label="Next"></button>
+    <button class="ctrl-btn" id="mpQueueBtn" title="Queue" aria-label="Open queue"></button>
+  </div>
+</div>
+
+<!-- immersive now-playing -->
+<div class="immersive" id="immersive">
+  <div class="bg-image" id="immBg"></div>
+  <div class="bg-scrim"></div>
+  <div class="grain" style="opacity:0.045;"></div>
+  <button class="icon-btn immersive-close" id="immClose" aria-label="Close player"></button>
+  <div class="immersive-content">
+    <div class="art">
+      <img id="immArt" alt="">
+      <div class="corner-frame"></div>
+      <div class="yt-reel-window" id="reelWindow"></div>
+    </div>
+    <div class="track-poet" id="immPoet">—</div>
+    <h2 id="immTitle">—</h2>
+    <div class="track-collection" id="immCollection"></div>
+
+    <div class="progress-row">
+      <time id="immCur">0:00</time>
+      <div class="scrubber" id="scrubber"><div class="track"><div class="fill" id="scrubFill"></div><div class="knob" id="scrubKnob"></div></div></div>
+      <time id="immDur">0:00</time>
+    </div>
+
+    <div class="transport-row">
+      <button class="ctrl-btn" id="immRepeat" title="Repeat" aria-label="Repeat"></button>
+      <button class="ctrl-btn big" id="immPrev" title="Previous" aria-label="Previous"></button>
+      <button class="ctrl-btn play-toggle" id="immPlay" title="Play/Pause" aria-label="Play or pause"></button>
+      <button class="ctrl-btn big" id="immNext" title="Next" aria-label="Next"></button>
+      <button class="fav-btn" id="immFav" title="Favorite" aria-label="Favorite" style="padding:8px;"></button>
+    </div>
+
+    <div class="secondary-row">
+      <button class="ctrl-btn" id="immRateDown" title="Slower" aria-label="Slower">−</button>
+      <div class="rate-label" id="rateLabel">1.0×</div>
+      <button class="ctrl-btn" id="immRateUp" title="Faster" aria-label="Faster">+</button>
+      <div class="vol-wrap">
+        <button class="ctrl-btn" id="immMute" title="Mute" aria-label="Mute"></button>
+        <input type="range" id="volSlider" min="0" max="100" value="80">
+      </div>
+      <button class="ctrl-btn" id="immQueueBtn" title="Queue" aria-label="Open queue"></button>
+    </div>
+
+    <button class="about-toggle" id="aboutToggle">about this recording</button>
+    <div class="about-panel" id="aboutPanel"></div>
+  </div>
+</div>
+
+<div class="scrim-overlay" id="scrimOverlay"></div>
+<div class="queue-drawer" id="queueDrawer">
+  <div class="queue-head">
+    <span class="h-3">Queue</span>
+    <div style="display:flex;gap:6px;">
+      <button class="btn small" id="clearQueueBtn">Clear</button>
+      <button class="icon-btn" id="queueClose" aria-label="Close queue"></button>
+    </div>
+  </div>
+  <div class="queue-list" id="queueList"></div>
+  <div class="queue-foot faint" id="queueFoot" style="font-size:0.8rem;"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="yt-host"><div id="yt-target"></div></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+/* ============================================================
+   lafzon ki duniya — application script
+   ============================================================ */
+"use strict";
+
+/* ---------- icons (minimal line-style svg) ---------- */
+var ICON = {
+  play:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 4.5v15l14-7.5z" fill="currentColor" stroke="none"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4.5" width="4.2" height="15"/><rect x="13.8" y="4.5" width="4.2" height="15"/></svg>',
+  prev:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 5v14M18 5.5 8 12l10 6.5z" stroke-linejoin="round" fill="currentColor" stroke="none"/></svg>',
+  next:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M18 5v14M6 5.5 16 12 6 18.5z" stroke-linejoin="round" fill="currentColor" stroke="none"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20.2s-7.6-4.6-10-9.3C.4 7.6 2.4 4 6 4c2.1 0 3.7 1.2 6 3.6C14.3 5.2 15.9 4 18 4c3.6 0 5.6 3.6 4 6.9-2.4 4.7-10 9.3-10 9.3z"/></svg>',
+  heartFill: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.2s-7.6-4.6-10-9.3C.4 7.6 2.4 4 6 4c2.1 0 3.7 1.2 6 3.6C14.3 5.2 15.9 4 18 4c3.6 0 5.6 3.6 4 6.9-2.4 4.7-10 9.3-10 9.3z"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.6-4.6" stroke-linecap="round"/></svg>',
+  queue: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h10M17 15v6M14 18h6"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg>',
+  repeat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-2.5-2.5M20 17H7l2.5 2.5"/></svg>',
+  repeatOne:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13l-2.5-2.5M20 17H7l2.5 2.5"/><text x="11.5" y="14" font-size="7" fill="currentColor" stroke="none" font-family="serif">1</text></svg>',
+  vol:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9a4 4 0 0 1 0 6"/></svg>',
+  mute:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>',
+  book:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M4 5.5C6 4.5 9 4.5 12 5.5v14C9 18.5 6 18.5 4 19.5v-14zM20 5.5C18 4.5 15 4.5 12 5.5v14c3-1 6-1 8 0v-14z"/></svg>',
+  home:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M4 11l8-6 8 6v8.5a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1V11z"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.5" cy="9" r="2.3"/><path d="M15.7 14.3c2.6.2 4.8 2.2 4.8 5.2"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.5V12l3 2"/></svg>',
+  sync:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 13.7-5.7L20 8M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.7 5.7L4 16M4 20v-4h4"/></svg>',
+  feather: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4c-6 0-12 4-14 12l-2 4 4-2C16 16 20 10 20 4z"/><path d="M8 16l8-8"/></svg>'
+};
+
+/* ---------- poet configuration ----------
+   sources: array of {type:'playlist'|'video', id: <youtube id>}
+   Only the id you supplied are used — nothing invented. Add more
+   sources later (e.g. once you have playlists for Jaun Elia) by
+   extending this array; the app re-syncs automatically. */
+var POETS = [
+  {
+    slug:'faiz-ahmed-faiz',
+    name:'Faiz Ahmed Faiz',
+    nameUrdu:'فیض احمد فیض',
+    years:'1911 – 1984',
+    initial:'ف',
+    short:'The most widely read Urdu poet of the twentieth century, who set romance and revolution in the same breath.',
+    bio:'Born in Sialkot in 1911, Faiz studied Arabic and English literature in Lahore before joining the British Indian Army and, later, the Progressive Writers\u2019 Movement. His verse fused the classical ghazal with the language of justice and resistance, a combination that brought him prison sentences under the Rawalpindi Conspiracy Case and years of exile, yet made him the best-selling Urdu poet in both India and Pakistan. In 1962 he became the first Asian awarded the Lenin Peace Prize. He died in Lahore in 1984.',
+    sources:[ {type:'playlist', id:'PLByUJ_VbMxwHByPFcK5aLoRdPg8gmU4gs'} ]
+  },
+  {
+    slug:'ahmad-faraz',
+    name:'Ahmad Faraz',
+    nameUrdu:'احمد فراز',
+    years:'1931 – 2008',
+    initial:'ف',
+    short:'The great romantic voice of modern Urdu ghazal, as at home in resistance as in longing.',
+    bio:'Born Syed Ahmad Shah in Kohat in 1931, Faraz studied Urdu and Persian literature before becoming a lecturer and, later, the founding director-general of the Pakistan Academy of Letters. His ghazals \u2014 lyrical, direct, endlessly quotable \u2014 made him one of the most recited poets of his generation, even as his open defiance of military rule cost him state honours he chose to return. He died in Islamabad in 2008.',
+    sources:[ {type:'playlist', id:'PLSl166uWe6ovFyLbIL0O7tFieQsbRL0VW'} ]
+  },
+  {
+    slug:'jaun-elia',
+    name:'Jaun Elia',
+    nameUrdu:'جون ایلیا',
+    years:'1931 – 2002',
+    initial:'ج',
+    short:'A philosopher-poet of loss and nihilism, whose diaries of despair became some of Urdu\u2019s most intimate ghazals.',
+    bio:'Born Syed Sibt-e-Asghar Naqvi in Amroha in 1931, into a family of scholars, Jaun Elia was fluent in Arabic, Persian, Sanskrit and Hebrew before he was out of his teens. He migrated to Karachi in 1957 and spent decades writing poetry he was reluctant to publish \u2014 his first collection, Shayad, appeared only in 1991. Melancholic, self-lacerating and quietly funny, his ghazals of unfulfilled love and existential doubt have made him one of the most quoted poets among younger readers today. He died in Karachi in 2002.',
+    sources:[ {type:'video', id:'pmog2cABaJk'} ]
+  },
+  {
+    slug:'zia-mohyeddin',
+    name:'Zia Mohyeddin',
+    nameUrdu:'ضیاء محی الدین',
+    years:'1931 – 2023',
+    initial:'ض',
+    short:'Not a poet but Urdu\u2019s definitive voice \u2014 the reciter who taught generations how a ghazal should sound aloud.',
+    bio:'Born in Lyallpur (now Faisalabad) in 1931, Zia Mohyeddin trained at RADA in London and built a stage and film career that ran from the West End premiere of A Passage to India to Lawrence of Arabia. In Pakistan he became something rarer: the actor whose recitations of Ghalib, Faiz and Iqbal defined how an entire country heard its own poetry, most famously through decades of live \u201cnashist\u201d recitation evenings. He founded and led the National Academy of Performing Arts in Karachi until his death in 2023.',
+    sources:[ {type:'playlist', id:'PLCTGa9vfQ95YtuZdOPj3McfUpY7gZPiVa'} ]
+  }
+];
+var POET_BY_SLUG = {};
+POETS.forEach(function(p){ POET_BY_SLUG[p.slug] = p; });
+
+/* ---------- small utils ---------- */
+function $(sel,ctx){ return (ctx||document).querySelector(sel); }
+function $all(sel,ctx){ return Array.prototype.slice.call((ctx||document).querySelectorAll(sel)); }
+function el(html){ var t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function fmtTime(sec){
+  sec = Math.max(0, Math.floor(sec||0));
+  var m = Math.floor(sec/60), s = sec%60;
+  return m + ':' + (s<10?'0':'') + s;
+}
+function parseISODuration(iso){
+  if(!iso) return 0;
+  var m = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(iso);
+  if(!m) return 0;
+  var h=parseInt(m[1]||0,10), mi=parseInt(m[2]||0,10), s=parseInt(m[3]||0,10);
+  return h*3600+mi*60+s;
+}
+function debounce(fn,ms){ var t; return function(){ var a=arguments,c=this; clearTimeout(t); t=setTimeout(function(){fn.apply(c,a);},ms); }; }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function toast(msg, ms){
+  var t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._h); toast._h = setTimeout(function(){ t.classList.remove('show'); }, ms||2600);
+}
+
+/* ============================================================
+   storage layer (localStorage) — everything persists here
+   ============================================================ */
+var LS_KEY = 'lkd_v1_';
+function lsGet(k, fallback){
+  try{ var v = localStorage.getItem(LS_KEY+k); return v==null ? fallback : JSON.parse(v); }
+  catch(e){ return fallback; }
+}
+function lsSet(k, v){
+  try{ localStorage.setItem(LS_KEY+k, JSON.stringify(v)); return true; }
+  catch(e){ console.warn('storage failed', e); return false; }
+}
+
+var Store = {
+  apiKey: lsGet('apiKey', ''),
+  favorites: lsGet('favorites', []),        // array of recording ids
+  recent: lsGet('recent', []),               // array of recording ids, most recent first
+  queue: lsGet('queue', []),                 // array of recording objects
+  queueIndex: lsGet('queueIndex', -1),
+  volume: lsGet('volume', 80),
+  rate: lsGet('rate', 1),
+  repeatMode: lsGet('repeatMode', 'off'),    // off | all | one
+  cache: lsGet('cache', {}),                 // { [poetSlug]: {items:[...], fetchedAt: ts} }
+  recDb: lsGet('recDb', {}),                 // flat map id -> recording, for favorites/recent lookups across sessions
+
+  saveFavorites: function(){ lsSet('favorites', this.favorites); },
+  saveRecent: function(){ lsSet('recent', this.recent); },
+  saveQueue: function(){ lsSet('queue', this.queue); lsSet('queueIndex', this.queueIndex); },
+  saveVolume: function(){ lsSet('volume', this.volume); },
+  saveRate: function(){ lsSet('rate', this.rate); },
+  saveRepeat: function(){ lsSet('repeatMode', this.repeatMode); },
+  saveCache: function(){ lsSet('cache', this.cache); },
+  saveRecDb: function(){ lsSet('recDb', this.recDb); },
+  saveApiKey: function(k){ this.apiKey = k; lsSet('apiKey', k); },
+
+  rememberRecordings: function(list){
+    var self = this;
+    list.forEach(function(r){ self.recDb[r.id] = r; });
+    this.saveRecDb();
+  },
+  isFavorite: function(id){ return this.favorites.indexOf(id) !== -1; },
+  toggleFavorite: function(rec){
+    var idx = this.favorites.indexOf(rec.id);
+    if(idx===-1){ this.favorites.unshift(rec.id); this.rememberRecordings([rec]); }
+    else { this.favorites.splice(idx,1); }
+    this.saveFavorites();
+    return idx===-1;
+  },
+  addRecent: function(rec){
+    this.recent = this.recent.filter(function(id){ return id!==rec.id; });
+    this.recent.unshift(rec.id);
+    if(this.recent.length>60) this.recent.length = 60;
+    this.rememberRecordings([rec]);
+    this.saveRecent();
+  },
+  getCached: function(slug){
+    var c = this.cache[slug];
+    return c && c.items && c.items.length ? c : null;
+  },
+  setCached: function(slug, items){
+    this.cache[slug] = { items: items, fetchedAt: Date.now() };
+    this.saveCache();
+    this.rememberRecordings(items);
+  }
+};
+
+/* central app + player state, not persisted directly (derived) */
+var App = {
+  route: 'home',
+  routeParam: null,
+  allLoaded: false,          // true once every poet's recordings are fetched at least once
+  loadingPoets: {}, errors: {},          // slug -> bool
+  library: {                 // slug -> recordings[]; also 'all' aggregate maintained lazily
+  }
+};
+
+/* ============================================================
+   Keyless archive loader — no API key, no signup.
+   1. public Piped / Invidious playlist APIs (all metadata in one request)
+   2. fallback: YouTube's own embed player reveals a playlist's video ids,
+      YouTube oEmbed supplies every title.
+   Nothing is invented: each entry is exactly what the playlist returns.
+   ============================================================ */
+var PIPED_HOSTS = ['https://pipedapi.kavin.rocks','https://pipedapi.adminforge.de','https://api.piped.private.coffee','https://pipedapi.leptons.xyz','https://pipedapi.nosebs.ru','https://pipedapi.reallyaweso.me'];
+var INVIDIOUS_HOSTS = ['https://inv.nadeko.net','https://yewtu.be','https://invidious.nerdvpn.de','https://invidious.privacyredirect.com','https://invidious.jing.rocks','https://iv.ggtyler.dev'];
+
+function fetchJSON(url, ms){
+  return new Promise(function(resolve, reject){
+    var ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var t = setTimeout(function(){ if(ctl) ctl.abort(); reject(new Error('timeout')); }, ms || 8000);
+    fetch(url, ctl ? {signal: ctl.signal} : {}).then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(d){ clearTimeout(t); resolve(d); }, function(e){ clearTimeout(t); reject(e); });
+  });
+}
+
+function firstOk(tasks){
+  return new Promise(function(resolve, reject){
+    var n = tasks.length, fails = 0;
+    if(!n) return reject(new Error('no sources'));
+    function fail(){ fails++; if(fails === n) reject(new Error('all sources failed')); }
+    tasks.forEach(function(task){
+      var p; try{ p = task(); }catch(e){ fail(); return; }
+      p.then(function(r){ if(r && r.length) resolve(r); else fail(); }, fail);
+    });
+  });
+}
+
+function mapLimit(arr, limit, fn){
+  return new Promise(function(resolve){
+    var out = new Array(arr.length), next = 0, active = 0, done = 0;
+    if(!arr.length) return resolve(out);
+    function pump(){
+      while(active < limit && next < arr.length){
+        (function(i){
+          active++;
+          fn(arr[i], i).then(function(r){ out[i] = r; }, function(){ out[i] = null; }).then(function(){
+            active--; done++;
+            if(done === arr.length) resolve(out); else pump();
+          });
+        })(next++);
+      }
+    }
+    pump();
+  });
+}
+
+function pipedPlaylist(base, id){
+  var items = [];
+  function more(np, guard){
+    if(!np || guard > 20) return Promise.resolve(items);
+    return fetchJSON(base + '/nextpage/playlists/' + id + '?nextpage=' + encodeURIComponent(np)).then(function(n){
+      items = items.concat(n.relatedStreams || []);
+      return more(n.nextpage, guard + 1);
+    });
+  }
+  return fetchJSON(base + '/playlists/' + id).then(function(d){
+    items = (d.relatedStreams || []).slice();
+    return more(d.nextpage, 0);
+  }).then(function(list){
+    return list.map(function(v){
+      var m = /[?&]v=([\w-]{11})/.exec(v.url || '');
+      return m ? {videoId:m[1], title:v.title, duration:v.duration || 0, author:v.uploaderName || ''} : null;
+    }).filter(Boolean);
+  });
+}
+
+function invidiousPlaylist(base, id){
+  var out = [];
+  function page(n){
+    return fetchJSON(base + '/api/v1/playlists/' + id + '?page=' + n).then(function(d){
+      var v = d.videos || [];
+      out = out.concat(v);
+      if(v.length >= 100 && n < 10) return page(n + 1);
+      return out;
+    });
+  }
+  return page(1).then(function(list){
+    return list.map(function(v){
+      return v.videoId ? {videoId:v.videoId, title:v.title, duration:v.lengthSeconds || 0, author:v.author || ''} : null;
+    }).filter(Boolean);
+  });
+}
+
+function oembedInfo(id){
+  var url = 'https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id);
+  return fetchJSON(url, 10000).catch(function(){ return fetchJSON(url, 10000); }).then(function(d){
+    return {videoId:id, title:d.title, author:d.author_name || '', duration:0};
+  });
+}
+
+var YT_WAITERS = [];
+function whenYT(){
+  return new Promise(function(res){
+    if(window.YT && window.YT.Player) res(); else YT_WAITERS.push(res);
+  });
+}
+function ytVars(extra){
+  var v = {controls:0, disablekb:1, modestbranding:1, rel:0, playsinline:1};
+  if(/^https?:$/.test(location.protocol)) v.origin = location.origin;
+  if(extra) Object.keys(extra).forEach(function(k){ v[k] = extra[k]; });
+  return v;
+}
+
+function probePlaylistIds(listId){
+  return whenYT().then(function(){
+    return new Promise(function(resolve, reject){
+      var holder = document.createElement('div');
+      holder.id = 'probe_' + uid();
+      $('#yt-host').appendChild(holder);
+      var pl, poll, killer;
+      function finish(err, ids){
+        clearInterval(poll); clearTimeout(killer);
+        try{ pl.destroy(); }catch(e){}
+        if(err) reject(err); else resolve(ids);
+      }
+      killer = setTimeout(function(){ finish(new Error('probe timeout')); }, 20000);
+      pl = new YT.Player(holder.id, {
+        height:'64', width:'64',
+        playerVars: ytVars({listType:'playlist', list:listId}),
+        events:{
+          onReady:function(){
+            poll = setInterval(function(){
+              var ids; try{ ids = pl.getPlaylist(); }catch(e){}
+              if(ids && ids.length) finish(null, ids);
+            }, 300);
+          }
+        }
+      });
+    });
+  });
+}
+
+function playlistViaProbe(listId){
+  return probePlaylistIds(listId).then(function(ids){
+    var seen = {}; ids = ids.filter(function(i){ if(seen[i]) return false; seen[i] = 1; return true; });
+    return mapLimit(ids, 8, oembedInfo).then(function(infos){ return infos.filter(Boolean); });
+  });
+}
+
+function playlistRaw(listId){
+  var tasks = [];
+  PIPED_HOSTS.forEach(function(h){ tasks.push(function(){ return pipedPlaylist(h, listId); }); });
+  INVIDIOUS_HOSTS.forEach(function(h){ tasks.push(function(){ return invidiousPlaylist(h, listId); }); });
+  return firstOk(tasks).catch(function(){ return playlistViaProbe(listId); });
+}
+
+function toRec(poet, raw, i){
+  return {
+    id: poet.slug + ':' + raw.videoId,
+    videoId: raw.videoId,
+    title: raw.title || '(untitled recording)',
+    poetSlug: poet.slug,
+    poetName: poet.name,
+    thumbnail: 'https://i.ytimg.com/vi/' + raw.videoId + '/hqdefault.jpg',
+    position: i,
+    collection: raw.author || '',
+    duration: raw.duration || 0,
+    embeddable: true,
+    unavailable: false
+  };
+}
+
+function loadPoetRecordings(poet, force){
+  if(!force){
+    var cached = Store.getCached(poet.slug);
+    if(cached){ App.library[poet.slug] = cached.items; return Promise.resolve(cached.items); }
+  }
+  App.loadingPoets[poet.slug] = true;
+  App.errors[poet.slug] = null;
+  return Promise.all(poet.sources.map(function(s){
+    var p = s.type === 'playlist' ? playlistRaw(s.id) : oembedInfo(s.id).then(function(r){ return [r]; });
+    return p.catch(function(){ return []; });
+  })).then(function(lists){
+    var flat = []; lists.forEach(function(l){ flat = flat.concat(l); });
+    var seen = {}, items = [];
+    flat.forEach(function(raw){
+      if(!raw || !raw.videoId || seen[raw.videoId]) return;
+      if(raw.title === 'Deleted video' || raw.title === 'Private video') return;
+      seen[raw.videoId] = 1;
+      items.push(toRec(poet, raw, items.length));
+    });
+    App.loadingPoets[poet.slug] = false;
+    if(!items.length){ App.errors[poet.slug] = 'empty'; throw new Error('no recordings returned'); }
+    Store.setCached(poet.slug, items);
+    App.library[poet.slug] = items;
+    return items;
+  }, function(err){
+    App.loadingPoets[poet.slug] = false; App.errors[poet.slug] = 'failed'; throw err;
+  });
+}
+
+function loadAllRecordings(force){
+  return Promise.all(POETS.map(function(p){ return loadPoetRecordings(p, force).catch(function(){ return []; }); })).then(function(){
+    App.allLoaded = true;
+    return getAllLoadedRecordings();
+  });
+}
+
+function getAllLoadedRecordings(){
+  var all = [];
+  POETS.forEach(function(p){ all = all.concat(App.library[p.slug] || []); });
+  return all;
+}
+
+function anyLoading(){
+  return POETS.some(function(p){ return App.loadingPoets[p.slug]; });
+}
+
+/* re-render after background loads without stealing focus or scroll */
+function refreshView(){
+  var h = parseHash();
+  document.documentElement.classList.add('no-anim');
+  if(h.route === 'search'){
+    var inp = $('#searchInput'), q = inp ? inp.value : '', focused = inp && document.activeElement === inp;
+    $('#app').innerHTML = renderNav() + '<main class="page">' + renderSearch(q) + '</main>';
+    if(focused){ var n = $('#searchInput'); n.focus(); n.setSelectionRange(q.length, q.length); }
+    return;
+  }
+  var y = window.scrollY;
+  renderRoute();
+  window.scrollTo(0, y);
+}
+
+/* ============================================================
+   YouTube IFrame player wrapper
+   ============================================================ */
+var YT_STATE = { player:null, ready:false, pendingVideoId:null, pollTimer:null };
+var RATES = [0.5,0.75,1,1.25,1.5,1.75,2];
+
+function onYouTubeIframeAPIReady(){
+  YT_WAITERS.splice(0).forEach(function(f){ f(); });
+  YT_STATE.player = new YT.Player('yt-target', {
+    height:'64', width:'64',
+    playerVars: ytVars(),
+    events:{
+      onReady:function(){
+        YT_STATE.ready = true;
+        YT_STATE.player.setVolume(Store.volume);
+        if(YT_STATE.pendingVideoId){ Player._loadNow(YT_STATE.pendingVideoId); YT_STATE.pendingVideoId=null; }
+      },
+      onStateChange:onPlayerStateChange,
+      onError:onPlayerError
+    }
+  });
+}
+function onPlayerStateChange(e){
+  var YTs = window.YT.PlayerState;
+  if(e.data === YTs.PLAYING){ Player.playing=true; startPoll(); Player._syncPlayIcons(); }
+  else if(e.data === YTs.PAUSED){ Player.playing=false; stopPoll(); Player._syncPlayIcons(); }
+  else if(e.data === YTs.ENDED){ Player.playing=false; stopPoll(); Player._onEnded(); }
+  else if(e.data === YTs.CUED){ /* ready to play */ }
+}
+function onPlayerError(e){
+  var codes = {2:'This recording\u2019s link looks invalid.',5:'This recording can\u2019t play in this browser.',100:'This recording has been removed from the archive.',153:'YouTube refuses embedded playback when this page is opened straight from a file. Host it on any web address (Netlify Drop, GitHub Pages) or run a local server.',101:'The uploader has disabled listening outside YouTube for this recording.',150:'The uploader has disabled listening outside YouTube for this recording.'};
+  toast(codes[e.data] || 'This recording can\u2019t be played right now.', e.data===153?9000:2600);
+  if(e.data===153){ Player.playing=false; Player._syncPlayIcons(); return; }
+  Player._markUnplayable();
+}
+function startPoll(){
+  stopPoll();
+  YT_STATE.pollTimer = setInterval(function(){
+    if(!YT_STATE.ready || !YT_STATE.player) return;
+    var cur = YT_STATE.player.getCurrentTime ? YT_STATE.player.getCurrentTime() : 0;
+    var dur = YT_STATE.player.getDuration ? YT_STATE.player.getDuration() : 0;
+    Player._onTick(cur, dur);
+  }, 350);
+}
+function stopPoll(){ if(YT_STATE.pollTimer){ clearInterval(YT_STATE.pollTimer); YT_STATE.pollTimer=null; } }
+
+/* ============================================================
+   Player controller — single source of truth for playback state
+   ============================================================ */
+var Player = {
+  current: null,     // recording object
+  queue: Store.queue || [],
+  index: Store.queueIndex!=null ? Store.queueIndex : -1,
+  playing: false,
+  duration: 0,
+  current_t: 0,
+
+  playFromList: function(rec, list){
+    this.queue = list.slice();
+    this.index = this.queue.findIndex(function(r){ return r.id===rec.id; });
+    if(this.index===-1){ this.queue.unshift(rec); this.index=0; }
+    Store.queue = this.queue; Store.queueIndex = this.index; Store.saveQueue();
+    this._playCurrent();
+  },
+  playSingle: function(rec){
+    this.playFromList(rec, [rec]);
+  },
+  addToQueue: function(rec){
+    this.queue.push(rec); Store.queue=this.queue; Store.saveQueue();
+    renderQueueDrawer(); toast('Added to queue');
+  },
+  playNext: function(rec){
+    var at = this.index<0?0:this.index+1;
+    this.queue.splice(at,0,rec); Store.queue=this.queue; Store.saveQueue();
+    renderQueueDrawer(); toast('Will play next');
+  },
+  removeFromQueue: function(idx){
+    if(idx===this.index) return;
+    this.queue.splice(idx,1);
+    if(idx<this.index) this.index--;
+    Store.queue=this.queue; Store.queueIndex=this.index; Store.saveQueue();
+    renderQueueDrawer();
+  },
+  clearQueue: function(){
+    var keep = this.index>=0 ? [this.queue[this.index]] : [];
+    this.queue = keep; this.index = keep.length?0:-1;
+    Store.queue=this.queue; Store.queueIndex=this.index; Store.saveQueue();
+    renderQueueDrawer();
+  },
+  next: function(){
+    if(this.index < this.queue.length-1){ this.index++; this._playCurrent(); }
+    else if(this.repeatAll()){ this.index=0; this._playCurrent(); }
+    else { this.playing=false; this._syncPlayIcons(); }
+    Store.queueIndex=this.index; Store.saveQueue();
+  },
+  prev: function(){
+    if(this.current_t > 3){ this.seekTo(0); return; }
+    if(this.index > 0){ this.index--; this._playCurrent(); Store.queueIndex=this.index; Store.saveQueue(); }
+    else { this.seekTo(0); }
+  },
+  repeatAll: function(){ return Store.repeatMode==='all'; },
+  toggleRepeat: function(){
+    var order = ['off','all','one'];
+    Store.repeatMode = order[(order.indexOf(Store.repeatMode)+1)%3];
+    Store.saveRepeat(); this._syncRepeatIcon();
+  },
+  _onEnded: function(){
+    if(Store.repeatMode==='one'){ this.seekTo(0); this.play(); return; }
+    this.next();
+  },
+  _playCurrent: function(){
+    this.current = this.queue[this.index];
+    if(!this.current) return;
+    Store.addRecent(this.current);
+    this._loadNow(this.current.videoId);
+    this.playing = true;
+    this._updateAllUI();
+    showMiniPlayer();
+  },
+  _loadNow: function(videoId){
+    if(!YT_STATE.ready){ YT_STATE.pendingVideoId = videoId; return; }
+    YT_STATE.player.loadVideoById(videoId);
+    YT_STATE.player.setPlaybackRate(Store.rate);
+    YT_STATE.player.setVolume(Store.volume);
+  },
+  _markUnplayable: function(){
+    if(this.current) this.current._unplayable = true;
+    this.next();
+  },
+  togglePlay: function(){
+    if(!YT_STATE.ready || !this.current) return;
+    if(this.playing){ this.pause(); } else { this.play(); }
+  },
+  play: function(){ if(YT_STATE.ready){ YT_STATE.player.playVideo(); } },
+  pause: function(){ if(YT_STATE.ready){ YT_STATE.player.pauseVideo(); } },
+  seekTo: function(sec){ if(YT_STATE.ready){ YT_STATE.player.seekTo(sec,true); this.current_t=sec; this._paintProgress(); } },
+  seekFraction: function(frac){ if(this.duration) this.seekTo(frac*this.duration); },
+  setVolume: function(v){ Store.volume=v; Store.saveVolume(); if(YT_STATE.ready) YT_STATE.player.setVolume(v); },
+  toggleMute: function(){
+    if(!YT_STATE.ready) return;
+    if(YT_STATE.player.isMuted()){ YT_STATE.player.unMute(); } else { YT_STATE.player.mute(); }
+    this._syncMuteIcon();
+  },
+  rateUp: function(){ this._stepRate(1); },
+  rateDown: function(){ this._stepRate(-1); },
+  _stepRate: function(dir){
+    var idx = RATES.indexOf(Store.rate); if(idx===-1) idx=2;
+    idx = Math.min(RATES.length-1, Math.max(0, idx+dir));
+    Store.rate = RATES[idx]; Store.saveRate();
+    if(YT_STATE.ready) YT_STATE.player.setPlaybackRate(Store.rate);
+    var lbl = $('#rateLabel'); if(lbl) lbl.textContent = Store.rate.toFixed(2).replace(/0$/,'').replace(/\.$/,'.0') + '\u00d7';
+  },
+  toggleFavoriteCurrent: function(){
+    if(!this.current) return;
+    var isFav = Store.toggleFavorite(this.current);
+    this._syncFavIcon(isFav);
+  },
+  _onTick: function(cur, dur){
+    this.current_t = cur; this.duration = dur || this.duration;
+    this._paintProgress();
+  },
+  _paintProgress: function(){
+    var frac = this.duration ? Math.min(1,this.current_t/this.duration) : 0;
+    var pct = (frac*100).toFixed(2)+'%';
+    var mp = $('#mpProgress'); if(mp) mp.style.width = pct;
+    var sf = $('#scrubFill'); if(sf) sf.style.width = pct;
+    var sk = $('#scrubKnob'); if(sk) sk.style.left = pct;
+    var ic = $('#immCur'); if(ic) ic.textContent = fmtTime(this.current_t);
+    var idur = $('#immDur'); if(idur) idur.textContent = fmtTime(this.duration);
+  },
+  _syncPlayIcons: function(){
+    var icon = this.playing ? ICON.pause : ICON.play;
+    var mpp = $('#mpPlay'); if(mpp) mpp.innerHTML = icon;
+    var ip = $('#immPlay'); if(ip) ip.innerHTML = icon;
+    var reel = $('#reelWindow'); if(reel) reel.classList.toggle('spin', !!this.playing);
+    $all('.rec-row').forEach(function(row){
+      var eq = row.querySelector('.eq'); if(eq) eq.remove();
+    });
+    if(this.current){
+      $all('.rec-row[data-rid="'+CSS.escape(this.current.id)+'"] .r-title').forEach(function(t){
+        if(!t.querySelector('.eq')) t.insertAdjacentHTML('afterbegin','<span class="eq"><span></span><span></span><span></span></span>');
+      });
+    }
+  },
+  _syncRepeatIcon: function(){
+    var btn = $('#immRepeat'); if(!btn) return;
+    var mode = Store.repeatMode;
+    btn.innerHTML = mode==='one' ? ICON.repeatOne : ICON.repeat;
+    btn.style.color = mode==='off' ? '' : 'var(--gold)';
+    btn.title = mode==='off' ? 'Repeat off' : (mode==='all' ? 'Repeat all' : 'Repeat one');
+  },
+  _syncMuteIcon: function(){
+    if(!YT_STATE.ready) return;
+    var muted = YT_STATE.player.isMuted();
+    var btn = $('#immMute'); if(btn) btn.innerHTML = muted ? ICON.mute : ICON.vol;
+  },
+  _syncFavIcon: function(isFav){
+    var btn = $('#immFav'); if(!btn) return;
+    btn.innerHTML = isFav ? ICON.heartFill : ICON.heart;
+    btn.classList.toggle('active', !!isFav);
+  },
+  _updateAllUI: function(){
+    if(!this.current) return;
+    var r = this.current;
+    $('#mpThumbImg').src = r.thumbnail; $('#mpThumbImg').alt = r.title;
+    $('#mpTitle').textContent = r.title; $('#mpPoet').textContent = r.poetName;
+    $('#immArt').src = r.thumbnail; $('#immArt').alt = r.title;
+    $('#immBg').style.backgroundImage = 'url("'+r.thumbnail+'")';
+    $('#immPoet').textContent = r.poetName;
+    $('#immTitle').textContent = r.title;
+    $('#immCollection').textContent = r.collection || '';
+    $('#aboutPanel').innerHTML = '<div><strong class="dim">Poet:</strong> '+esc(r.poetName)+'</div>'+
+      '<div><strong class="dim">Source:</strong> '+esc(r.collection||'YouTube')+'</div>'+
+      '<div><strong class="dim">Recording:</strong> '+esc(r.title)+'</div>';
+    $('#rateLabel').textContent = Store.rate.toFixed(2).replace(/0$/,'').replace(/\.$/,'.0') + '\u00d7';
+    $('#volSlider').value = Store.volume;
+    this._syncFavIcon(Store.isFavorite(r.id));
+    this._syncRepeatIcon();
+    this._syncPlayIcons();
+    renderQueueDrawer();
+    // refresh any visible library rows (playing highlight) without a full route re-render
+    $all('.rec-row').forEach(function(row){ row.classList.toggle('playing', row.getAttribute('data-rid')===r.id); });
+  }
+};
+
+/* ============================================================
+   shared markup builders
+   ============================================================ */
+function plateMarkup(poet){
+  return '<div class="plate no-photo"><div class="plate-initial">'+esc(poet.initial)+'</div></div>';
+}
+function poetCardMarkup(poet, idx){
+  var count = (App.library[poet.slug]||[]).length;
+  var countLabel = App.loadingPoets[poet.slug] ? 'loading\u2026' : (count ? count + (count===1?' recording':' recordings') : (App.errors[poet.slug] ? 'unavailable' : '\u2014'));
+  return '' +
+  '<div class="poet-card" data-action="open-poet" data-slug="'+poet.slug+'">' +
+    '<div class="plate-wrap" style="position:relative;">' + plateMarkup(poet) +
+      '<div class="plate-num">0'+(idx+1)+'</div>' +
+    '</div>' +
+    '<div class="info">' +
+      '<div class="name-en">'+esc(poet.name)+'</div>' +
+      '<div class="name-ur urdu">'+esc(poet.nameUrdu)+'</div>' +
+      '<div class="desc">'+esc(poet.short)+'</div>' +
+      '<div class="meta"><span>'+esc(poet.years)+'</span><span>'+countLabel+'</span></div>' +
+    '</div>' +
+  '</div>';
+}
+function railCardMarkup(rec){
+  return '' +
+  '<div class="rail-card" data-action="play-context" data-rid="'+esc(rec.id)+'">' +
+    '<div class="thumb"><img src="'+esc(rec.thumbnail)+'" alt="" loading="lazy">' +
+      '<div class="play-ring"><span>'+ICON.play+'</span></div>' +
+    '</div>' +
+    '<div class="title">'+esc(rec.title)+'</div>' +
+    '<div class="poet">'+esc(rec.poetName)+'</div>' +
+  '</div>';
+}
+function recRowMarkup(rec, i){
+  var isPlaying = Player.current && Player.current.id===rec.id;
+  var isFav = Store.isFavorite(rec.id);
+  return '' +
+  '<li class="rec-row'+(isPlaying?' playing':'')+'" data-rid="'+esc(rec.id)+'" data-action="play-context">' +
+    '<div class="idx">'+(i+1)+'</div>' +
+    '<div class="thumb-sm"><img src="'+esc(rec.thumbnail)+'" alt="" loading="lazy"></div>' +
+    '<div class="r-title">'+(isPlaying?'<span class="eq"><span></span><span></span><span></span></span>':'')+esc(rec.title)+'</div>' +
+    '<div class="r-dur">'+(rec.duration?fmtTime(rec.duration):'\u2014')+'</div>' +
+    '<div class="r-actions">' +
+      '<button class="fav-btn'+(isFav?' active':'')+'" data-action="toggle-fav" data-rid="'+esc(rec.id)+'" title="Favorite" aria-label="Favorite">'+(isFav?ICON.heartFill:ICON.heart)+'</button>' +
+      '<button class="ctrl-btn" data-action="queue-next" data-rid="'+esc(rec.id)+'" title="Play next" aria-label="Play next" style="padding:6px;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>' +
+    '</div>' +
+  '</li>';
+}
+function stateBlock(opts){
+  return '<div class="state-block">' + (opts.spinner?'<div class="spinner"></div>':'') +
+    '<div class="h-2">'+esc(opts.title)+'</div><p>'+esc(opts.body||'')+'</p>' +
+    (opts.action ? '<div style="margin-top:20px;">'+opts.action+'</div>' : '') +
+  '</div>';
+}
+
+/* find a recording by id across everything we currently know about */
+function findRecordingById(id){
+  var all = getAllLoadedRecordings();
+  for(var i=0;i<all.length;i++) if(all[i].id===id) return all[i];
+  return Store.recDb[id] || null;
+}
+/* the list a row's context belongs to, so next/prev makes sense while browsing */
+function contextListFor(container){
+  return $all('.rec-row, .rail-card', container).map(function(node){
+    return findRecordingById(node.getAttribute('data-rid'));
+  }).filter(Boolean);
+}
+
+/* ============================================================
+   PAGE: home
+   ============================================================ */
+function renderHome(){
+  var recentIds = Store.recent.slice(0,8).map(function(id){ return Store.recDb[id]; }).filter(Boolean);
+  var featured = [];
+  POETS.forEach(function(p){ var items=App.library[p.slug]||[]; if(items[0]) featured.push(items[0]); if(items[1]) featured.push(items[1]); });
+  featured = featured.slice(0,8);
+
+  var html = '' +
+  '<section class="hero">' +
+    '<div class="grain"></div><div class="vignette"></div>' +
+    '<div class="hero-inner">' +
+      '<div class="kicker"><span class="line"></span><span class="eyebrow">a digital mehfil</span></div>' +
+      '<h1 class="h-hero">lafzon ki<br>duniya</h1>' +
+      '<div class="urdu-line urdu">\u062c\u06c1\u0627\u06BA \u0644\u0641\u0638 \u0622\u0648\u0627\u0632 \u0628\u0646 \u062C\u0627\u062A\u06D2 \u06C1\u06CC\u06BA</div>' +
+      '<p class="lede">Four voices, recorded and recited across half a century of Urdu literature \u2014 Faiz, Faraz, Jaun Elia and Zia Mohyeddin \u2014 gathered into one quiet room for late-night listening.</p>' +
+      '<div class="hero-cta">' +
+        '<button class="btn primary" data-action="goto" data-route="poet" data-slug="'+POETS[0].slug+'">Begin listening</button>' +
+        '<button class="btn" data-action="goto" data-route="library">Browse the library</button>' +
+      '</div>' +
+    '</div>' +
+  '</section>' +
+  '<section class="block"><div class="wrap">' +
+    '<div class="section-head"><h2 class="h-2">Four voices</h2></div>' +
+    '<div class="poet-grid">' + POETS.map(poetCardMarkup).join('') + '</div>' +
+  '</div></section>';
+
+  if(location.protocol==='file:'){ html = html.replace('<section class="block">', '<div class="wrap"><div class="notice">Opened straight from a file: YouTube may refuse to play embedded recordings without a web address. Host this file on any free static host (Netlify Drop, GitHub Pages) or run a local server and playback will work.</div></div><section class="block">'); }
+
+  if(recentIds.length){
+    html += '<section class="block"><div class="wrap">' +
+      '<div class="section-head"><h2 class="h-2">Recently heard</h2><a class="more" data-action="goto" data-route="library" data-filter="recent">see all</a></div>' +
+      '<div class="rail">' + recentIds.map(railCardMarkup).join('') + '</div>' +
+    '</div></section>';
+  }
+
+  if(featured.length){
+    html += '<section class="block"><div class="wrap">' +
+      '<div class="section-head"><h2 class="h-2">From the archive</h2><a class="more" data-action="goto" data-route="library">see all</a></div>' +
+      '<div class="rail">' + featured.map(railCardMarkup).join('') + '</div>' +
+    '</div></section>';
+  } else {
+    html += '<section class="block"><div class="wrap">' + stateBlock(anyLoading() ? {spinner:true, title:'Reading the archive\u2026', body:'Fetching the real recordings from each playlist. This only takes a moment and is cached for next time.'} : {title:'The archive can\u2019t be reached', body:'The public sources didn\u2019t respond. Check your connection and try again.', action:'<button class="btn primary" data-action="resync-all">Try again</button>'}) + '</div></section>';
+  }
+  return html;
+}
+
+/* ============================================================
+   PAGE: poet detail
+   ============================================================ */
+function renderPoet(slug){
+  var poet = POET_BY_SLUG[slug];
+  if(!poet) return stateBlock({title:'Poet not found', body:'That page doesn\u2019t exist in this archive.'});
+  var items = App.library[slug] || [];
+  var sorted = items.slice().sort(function(a,b){ return a.position-b.position; });
+
+  var body;
+  if(App.loadingPoets[slug] && !sorted.length){
+    body = stateBlock({spinner:true, title:'Reading '+poet.name+'\u2019s archive\u2026', body:'Pulling the real recordings from the playlist you provided.'});
+  } else if(!sorted.length){
+    body = stateBlock({title:'Couldn\u2019t load this archive', body:'The public sources didn\u2019t respond. Check your connection and try again.', action:'<button class="btn" data-action="resync" data-slug="'+slug+'">Try again</button>'});
+  } else {
+    body = '<ul class="rec-list">' + sorted.map(function(r,i){ return recRowMarkup(r,i); }).join('') + '</ul>';
+  }
+
+  return '' +
+  '<div class="poet-banner">' +
+    '<div class="bg no-photo"></div><div class="scrim"></div><div class="grain"></div>' +
+    '<div class="poet-banner-inner">' +
+      '<div class="name-ur urdu">'+esc(poet.nameUrdu)+'</div>' +
+      '<h1 class="h-1 name-en">'+esc(poet.name)+'</h1>' +
+      '<div class="years">'+esc(poet.years)+'</div>' +
+      '<p class="bio">'+esc(poet.bio)+'</p>' +
+      '<div class="stat-row">' +
+        '<div class="stat"><b>'+sorted.length+'</b>recordings</div>' +
+        '<div class="stat"><b>'+(POETS.indexOf(poet)+1)+'</b>of four voices</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>' +
+  '<div class="wrap" style="padding-top:34px;">' +
+    '<div class="tab-row"><button class="active">Recordings</button></div>' +
+    body +
+  '</div>';
+}
+
+/* ============================================================
+   PAGE: library (all / per poet / favorites / recent)
+   ============================================================ */
+function renderLibrary(filter){
+  filter = filter || 'all';
+  var all = getAllLoadedRecordings();
+  var list;
+  var title;
+  if(filter==='favorites'){
+    list = Store.favorites.map(function(id){ return Store.recDb[id]; }).filter(Boolean);
+    title = 'Saved poetry';
+  } else if(filter==='recent'){
+    list = Store.recent.map(function(id){ return Store.recDb[id]; }).filter(Boolean);
+    title = 'Recently heard';
+  } else if(POET_BY_SLUG[filter]){
+    list = (App.library[filter]||[]).slice().sort(function(a,b){return a.position-b.position;});
+    title = POET_BY_SLUG[filter].name;
+  } else {
+    list = all;
+    title = 'The complete archive';
+  }
+
+  var chips = [['all','All poetry']].concat(POETS.map(function(p){return [p.slug,p.name];})).concat([['recent','Recently played'],['favorites','Favorites']]);
+
+  var listHtml;
+  if(!list.length && anyLoading() && (filter==='all' || POET_BY_SLUG[filter])){
+    listHtml = stateBlock({spinner:true, title:'Reading the archive\u2026', body:'Recordings appear as each playlist arrives.'});
+  } else if(!list.length){
+    listHtml = stateBlock({title: filter==='favorites' ? 'No favorites yet' : (filter==='recent' ? 'Nothing played yet' : 'Nothing here yet'), body: filter==='favorites' ? 'Recordings you favorite will be saved here.' : (filter==='recent' ? 'Recordings you listen to will show up here.' : 'Still syncing this section of the archive.')});
+  } else {
+    listHtml = '<ul class="rec-list">' + list.map(function(r,i){ return recRowMarkup(r,i); }).join('') + '</ul>';
+  }
+
+  return '<div class="wrap" style="padding-top:44px;">' +
+    '<div class="section-head"><h1 class="h-1">'+esc(title)+'</h1></div>' +
+    '<div class="filter-row">' + chips.map(function(c){ return '<button class="chip'+(c[0]===filter?' active':'')+'" data-action="goto" data-route="library" data-filter="'+c[0]+'">'+esc(c[1])+'</button>'; }).join('') + '</div>' +
+    listHtml +
+  '</div>';
+}
+
+/* ============================================================
+   PAGE: search
+   ============================================================ */
+function renderSearch(query){
+  query = (query||'').trim();
+  var results = [];
+  if(query){
+    var q = query.toLowerCase();
+    results = getAllLoadedRecordings().filter(function(r){
+      return r.title.toLowerCase().indexOf(q)!==-1 || r.poetName.toLowerCase().indexOf(q)!==-1;
+    });
+  }
+  var body;
+  if(!query){
+    body = stateBlock({title:'Search the archive', body:'Search by poet, recording title or keyword.'});
+  } else if(!query){
+    body = stateBlock({title:'Search the archive', body:'Search by poet, recording title or keyword.'});
+  } else if(!results.length){
+    body = stateBlock({title:'No matches for \u201c'+esc(query)+'\u201d', body:'Try a poet\u2019s name, or a word from a title.'});
+  } else {
+    body = '<ul class="rec-list">' + results.map(function(r,i){ return recRowMarkup(r,i); }).join('') + '</ul>';
+  }
+  return '<div class="wrap" style="padding-top:44px;">' +
+    '<div class="search-box">'+ICON.search+'<input id="searchInput" type="text" placeholder="Search poets, titles, recordings\u2026" value="'+esc(query)+'" autofocus></div>' +
+    body +
+  '</div>';
+}
+
+/* ============================================================
+   nav + router
+   ============================================================ */
+function renderNav(){
+  var r = App.route;
+  return '' +
+  '<nav class="topnav">' +
+    '<a class="brand" href="#/home" data-action="goto" data-route="home">' +
+      '<span class="brand-en">lafzon ki duniya</span>' +
+      '<span class="brand-ur urdu">\u0644\u0641\u0638\u0648\u06BA</span>' +
+    '</a>' +
+    '<div class="navlinks">' +
+      '<a class="'+(r==='home'?'active':'')+' nav-text" data-action="goto" data-route="home">Home</a>' +
+      '<a class="'+(r==='poet'?'active':'')+' nav-text" data-action="goto" data-route="poet" data-slug="'+POETS[0].slug+'">Poets</a>' +
+      '<a class="'+(r==='library'?'active':'')+' nav-text" data-action="goto" data-route="library">Library</a>' +
+      '<a class="'+(r==='library'&&App.routeParam==='favorites'?'active':'')+' nav-text" data-action="goto" data-route="library" data-filter="favorites">Favorites</a>' +
+      '<button class="icon-btn" data-action="goto" data-route="search" title="Search" aria-label="Search">'+ICON.search+'</button>' +
+      '' +
+    '</div>' +
+  '</nav>';
+}
+
+function parseHash(){
+  var raw = location.hash.replace(/^#\/?/, '');
+  var qsIndex = raw.indexOf('?');
+  var pathPart = qsIndex===-1 ? raw : raw.slice(0,qsIndex);
+  var qsPart = qsIndex===-1 ? '' : raw.slice(qsIndex+1);
+  var parts = pathPart.split('/');
+  var route = parts[0] || 'home';
+  var param = parts[1] ? decodeURIComponent(parts[1]) : null;
+  var query = {};
+  if(qsPart){ qsPart.split('&').forEach(function(pair){ var kv=pair.split('='); if(kv[0]) query[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1]||''); }); }
+  return { route:route, param: param, query: query };
+}
+
+function renderRoute(){
+  var h = parseHash();
+  App.route = h.route; App.routeParam = h.param;
+
+  if(h.route==='setup'){ location.hash = '#/home'; return; }
+
+  var mainHtml;
+  if(h.route==='poet'){ mainHtml = renderPoet(h.param); }
+  else if(h.route==='library'){ mainHtml = renderLibrary(h.query.filter || h.param); }
+  else if(h.route==='search'){ mainHtml = renderSearch(h.query.q || h.param); }
+  else { mainHtml = renderHome(); App.route='home'; }
+
+  document.getElementById('app').innerHTML = renderNav() + '<main class="page">' + mainHtml + '</main>';
+  Player._syncPlayIcons();
+  if(Player.current){
+    $all('.rec-row').forEach(function(row){ row.classList.toggle('playing', row.getAttribute('data-rid')===Player.current.id); });
+  }
+}
+
+/* ============================================================
+   mini player / immersive / queue drawer visibility
+   ============================================================ */
+function showMiniPlayer(){ $('#miniPlayer').classList.add('show'); }
+function openImmersive(){ $('#immersive').classList.add('show'); document.body.style.overflow='hidden'; }
+function closeImmersive(){ $('#immersive').classList.remove('show'); document.body.style.overflow=''; }
+function openQueue(){ $('#queueDrawer').classList.add('show'); $('#scrimOverlay').classList.add('show'); renderQueueDrawer(); }
+function closeQueue(){ $('#queueDrawer').classList.remove('show'); $('#scrimOverlay').classList.remove('show'); }
+
+function renderQueueDrawer(){
+  var list = $('#queueList'); if(!list) return;
+  if(!Player.queue.length){
+    list.innerHTML = stateBlock({title:'Queue is empty', body:'Add recordings from any list to build a session.'});
+  } else {
+    list.innerHTML = Player.queue.map(function(r,i){
+      return '<div class="queue-item'+(i===Player.index?' playing':'')+'" data-qidx="'+i+'">' +
+        '<div class="qi-thumb"><img src="'+esc(r.thumbnail)+'" alt=""></div>' +
+        '<div class="qi-title" data-action="play-queue-item" data-qidx="'+i+'">'+esc(r.title)+'</div>' +
+        (i===Player.index?'':'<button class="qi-remove" data-action="remove-queue-item" data-qidx="'+i+'" aria-label="Remove">'+ICON.close+'</button>') +
+      '</div>';
+    }).join('');
+  }
+  $('#queueFoot').textContent = Player.queue.length + (Player.queue.length===1?' recording in queue':' recordings in queue');
+}
+
+/* ============================================================
+   static control bindings (elements outside the router-managed #app)
+   ============================================================ */
+function bindStaticControls(){
+  $('#mpPlay').addEventListener('click', function(){ Player.togglePlay(); });
+  $('#mpPrev').addEventListener('click', function(){ Player.prev(); });
+  $('#mpNext').addEventListener('click', function(){ Player.next(); });
+  $('#mpPrev').innerHTML = ICON.prev; $('#mpNext').innerHTML = ICON.next; $('#mpPlay').innerHTML = ICON.play;
+  $('#mpQueueBtn').innerHTML = ICON.queue;
+  $('#mpQueueBtn').addEventListener('click', openQueue);
+  $('#mpThumb').addEventListener('click', function(){ if(Player.current) openImmersive(); });
+  $('#mpMeta').addEventListener('click', function(){ if(Player.current) openImmersive(); });
+
+  $('#immClose').innerHTML = ICON.close;
+  $('#immClose').addEventListener('click', closeImmersive);
+  $('#immPlay').addEventListener('click', function(){ Player.togglePlay(); });
+  $('#immPrev').addEventListener('click', function(){ Player.prev(); });
+  $('#immNext').addEventListener('click', function(){ Player.next(); });
+  $('#immPrev').innerHTML = ICON.prev; $('#immNext').innerHTML = ICON.next; $('#immPlay').innerHTML = ICON.play;
+  $('#immRepeat').addEventListener('click', function(){ Player.toggleRepeat(); });
+  $('#immFav').addEventListener('click', function(){ Player.toggleFavoriteCurrent(); });
+  $('#immFav').innerHTML = ICON.heart;
+  $('#immRateUp').addEventListener('click', function(){ Player.rateUp(); });
+  $('#immRateDown').addEventListener('click', function(){ Player.rateDown(); });
+  $('#immMute').innerHTML = ICON.vol;
+  $('#immMute').addEventListener('click', function(){ Player.toggleMute(); });
+  $('#immQueueBtn').innerHTML = ICON.queue;
+  $('#immQueueBtn').addEventListener('click', openQueue);
+
+  $('#volSlider').value = Store.volume;
+  $('#volSlider').addEventListener('input', function(e){ Player.setVolume(parseInt(e.target.value,10)); });
+
+  $('#aboutToggle').addEventListener('click', function(){ $('#aboutPanel').classList.toggle('show'); });
+
+  $('#queueClose').innerHTML = ICON.close;
+  $('#queueClose').addEventListener('click', closeQueue);
+  $('#scrimOverlay').addEventListener('click', closeQueue);
+  $('#clearQueueBtn').addEventListener('click', function(){ Player.clearQueue(); });
+
+  /* scrubber: click + drag to seek */
+  var scrub = $('#scrubber');
+  var dragging = false;
+  function fracFromEvent(e){
+    var rect = scrub.getBoundingClientRect();
+    var x = (e.touches?e.touches[0].clientX:e.clientX) - rect.left;
+    return Math.min(1, Math.max(0, x / rect.width));
+  }
+  function previewFrac(f){ $('#scrubFill').style.width=(f*100)+'%'; $('#scrubKnob').style.left=(f*100)+'%'; $('#immCur').textContent = fmtTime(f*Player.duration); }
+  scrub.addEventListener('pointerdown', function(e){ dragging=true; previewFrac(fracFromEvent(e)); });
+  window.addEventListener('pointermove', function(e){ if(dragging) previewFrac(fracFromEvent(e)); });
+  window.addEventListener('pointerup', function(e){ if(dragging){ dragging=false; Player.seekFraction(fracFromEvent(e)); } });
+
+  /* keyboard */
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape'){ closeImmersive(); closeQueue(); }
+    var tag = (e.target.tagName||'').toLowerCase();
+    if(tag==='input' || tag==='textarea') return;
+    if(e.code==='Space' && Player.current){ e.preventDefault(); Player.togglePlay(); }
+  });
+}
+
+/* ============================================================
+   delegated actions for content rendered inside #app
+   ============================================================ */
+function routeHashFor(route, slug, filter){
+  var hash = '#/'+route;
+  if(route==='poet' && slug) hash += '/'+encodeURIComponent(slug);
+  if(route==='library' && filter) hash += '?filter='+encodeURIComponent(filter);
+  return hash;
+}
+
+document.addEventListener('click', function(e){
+  var t = e.target.closest('[data-action]');
+  if(!t) return;
+  var action = t.getAttribute('data-action');
+
+  if(action==='goto'){
+    location.hash = routeHashFor(t.getAttribute('data-route'), t.getAttribute('data-slug'), t.getAttribute('data-filter'));
+  }
+  else if(action==='open-poet'){
+    location.hash = '#/poet/'+encodeURIComponent(t.getAttribute('data-slug'));
+  }
+  else if(action==='play-context'){
+    var rid = t.getAttribute('data-rid');
+    var rec = findRecordingById(rid);
+    if(!rec) return;
+    var container = t.closest('.rec-list') || t.closest('.rail') || document;
+    var list = contextListFor(container);
+    if(!list.length) list = [rec];
+    Player.playFromList(rec, list);
+  }
+  else if(action==='toggle-fav'){
+    e.stopPropagation();
+    var rec2 = findRecordingById(t.getAttribute('data-rid'));
+    if(!rec2) return;
+    var isFav = Store.toggleFavorite(rec2);
+    t.classList.toggle('active', isFav);
+    t.innerHTML = isFav ? ICON.heartFill : ICON.heart;
+    if(Player.current && Player.current.id===rec2.id) Player._syncFavIcon(isFav);
+  }
+  else if(action==='queue-next'){
+    e.stopPropagation();
+    var rec3 = findRecordingById(t.getAttribute('data-rid'));
+    if(rec3) Player.playNext(rec3);
+  }
+  else if(action==='play-queue-item'){
+    var qi = parseInt(t.getAttribute('data-qidx'),10);
+    Player.index = qi; Store.queueIndex = qi; Player._playCurrent(); closeQueue();
+  }
+  else if(action==='remove-queue-item'){
+    e.stopPropagation();
+    Player.removeFromQueue(parseInt(t.getAttribute('data-qidx'),10));
+  }
+  else if(action==='resync-all'){
+    toast('Reading the archive\u2026');
+    POETS.forEach(function(p){ loadPoetRecordings(p, true).then(refreshView, refreshView); });
+    refreshView();
+  }
+  else if(action==='resync'){
+    var slugR = t.getAttribute('data-slug');
+    var poetR = POET_BY_SLUG[slugR];
+    if(!poetR) return;
+    toast('Resyncing\u2026');
+    loadPoetRecordings(poetR, true).then(function(){ renderRoute(); toast('Resynced'); })
+      .catch(function(err){ toast('Could not resync \u2014 ' + err.message); });
+  }
+});
+
+document.addEventListener('input', function(e){
+  if(e.target && e.target.id==='searchInput'){
+    var q = e.target.value;
+    clearTimeout(document._searchT);
+    document._searchT = setTimeout(function(){
+      var container = $('#app');
+      var scroll = window.scrollY;
+      container.innerHTML = renderNav() + '<main class="page">' + renderSearch(q) + '</main>';
+      window.scrollTo(0, scroll);
+      var input = $('#searchInput'); if(input){ input.focus(); input.setSelectionRange(q.length,q.length); }
+    }, 200);
+  }
+});
+
+/* ============================================================
+   boot
+   ============================================================ */
+function restoreQueueIfAny(){
+  if(Store.queue && Store.queue.length && Store.queueIndex!=null && Store.queueIndex>=0 && Store.queue[Store.queueIndex]){
+    Player.queue = Store.queue.slice();
+    Player.index = Store.queueIndex;
+    Player.current = Player.queue[Player.index];
+    Player.playing = false;
+    Player._updateAllUI();
+    showMiniPlayer();
+  }
+}
+
+function init(){
+  bindStaticControls();
+  window.addEventListener('hashchange', function(){ document.documentElement.classList.remove('no-anim'); renderRoute(); });
+  Player._syncRepeatIcon();
+  restoreQueueIfAny();
+
+  renderRoute();
+  POETS.forEach(function(p){ loadPoetRecordings(p).then(refreshView, refreshView); });
+}
+
+if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', init); }
+else { init(); }
+</script>
+</body>
+</html>
