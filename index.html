@@ -592,6 +592,7 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
 <div class="toast" id="toast"></div>
 <div id="yt-host"><div id="yt-target"></div></div>
 
+<script>window.__ytApiReady=false;window.onYouTubeIframeAPIReady=function(){window.__ytApiReady=true;if(window.__ytInit)window.__ytInit();};</script>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 /* ============================================================
@@ -1035,7 +1036,10 @@ function refreshView(){
 var YT_STATE = { player:null, ready:false, pendingVideoId:null, pollTimer:null };
 var RATES = [0.5,0.75,1,1.25,1.5,1.75,2];
 
-function onYouTubeIframeAPIReady(){
+var ytInited = false;
+function ytInit(){
+  if(ytInited || !(window.YT && window.YT.Player)) return;
+  ytInited = true;
   YT_WAITERS.splice(0).forEach(function(f){ f(); });
   YT_STATE.player = new YT.Player('yt-target', {
     height:'200', width:'200',
@@ -1051,6 +1055,7 @@ function onYouTubeIframeAPIReady(){
     }
   });
 }
+window.__ytInit = ytInit;
 function onPlayerStateChange(e){
   var YTs = window.YT.PlayerState;
   if(e.data === YTs.PLAYING){ clearTimeout(ytStartTimer); var fb=document.getElementById('ytFallback'); if(fb) fb.remove(); Player.playing=true; startPoll(); Player._syncPlayIcons(); }
@@ -1069,9 +1074,10 @@ function ytFallback(msg){
 var ytStartTimer = null;
 function onPlayerError(e){
   var codes = {2:'This recording\u2019s link looks invalid.',5:'This recording can\u2019t play in this browser.',100:'This recording has been removed from the archive.',153:'YouTube refuses embedded playback when this page is opened straight from a file. Host it on any web address (Netlify Drop, GitHub Pages) or run a local server.',101:'The uploader has disabled listening outside YouTube for this recording.',150:'The uploader has disabled listening outside YouTube for this recording.'};
-  if([101,150,153,5].indexOf(e.data)>-1){ ytFallback(e.data===153 ? 'Playback is blocked because the file was opened directly (file://).' : 'This recording can\u2019t play inside the app.'); }
+  if([101,150,153,5].indexOf(e.data)>-1){ ytFallback(e.data===153 ? 'Playback is blocked because the file was opened directly (file://).' : 'YouTube blocked embedded playback for this recording (error '+e.data+').'); }
   else toast(codes[e.data] || 'This recording can\u2019t be played right now.', 2600);
   if(e.data===153){ Player.playing=false; Player._syncPlayIcons(); return; }
+  if([101,150,5].indexOf(e.data)>-1){ Player.playing=false; Player._syncPlayIcons(); return; }
   Player._markUnplayable();
 }
 function startPoll(){
@@ -1159,9 +1165,14 @@ var Player = {
     showMiniPlayer();
   },
   _loadNow: function(videoId){
-    if(!YT_STATE.ready){ YT_STATE.pendingVideoId = videoId; return; }
+    if(!YT_STATE.ready){
+      YT_STATE.pendingVideoId = videoId;
+      clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(!YT_STATE.ready) ytFallback('The YouTube player didn\u2019t load (blocked network, ad-blocker or offline).'); }, 8000);
+      if(window.YT && window.YT.Player) ytInit();
+      return;
+    }
     YT_STATE.player.loadVideoById(videoId);
-    clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(YT_STATE.player.getPlayerState && YT_STATE.player.getPlayerState()!==1){ ytFallback('Playback didn\u2019t start.'); } }, 6000);
+    clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(YT_STATE.player.getPlayerState && [1,3].indexOf(YT_STATE.player.getPlayerState())===-1){ ytFallback('Playback didn\u2019t start.'); } }, 6000);
     YT_STATE.player.setPlaybackRate(Store.rate);
     YT_STATE.player.setVolume(Store.volume);
   },
@@ -1820,6 +1831,7 @@ function restoreQueueIfAny(){
 
 function init(){
   bindStaticControls();
+  if(window.__ytApiReady || (window.YT && window.YT.Player)) ytInit();
   window.addEventListener('hashchange', function(){ document.documentElement.classList.remove('no-anim'); renderRoute(); });
   Player._syncRepeatIcon();
   restoreQueueIfAny();
