@@ -373,8 +373,8 @@ section.block + section.block{ border-top:1px solid var(--rule); }
 .yt-reel-window.spin{ animation:reelspin 3.4s linear infinite; }
 @keyframes reelspin{ to{ transform:rotate(360deg); } }
 /* persistent host: always in the render tree so audio never pauses when overlays close */
-#yt-host{ position:fixed; right:6px; bottom:6px; width:64px; height:64px; overflow:hidden; opacity:0.02; pointer-events:none; z-index:1; }
-#yt-host iframe{ width:64px; height:64px; }
+#yt-host{ position:fixed; right:0; bottom:0; width:200px; height:200px; overflow:hidden; opacity:0.01; pointer-events:none; z-index:1; }
+#yt-host iframe{ width:200px; height:200px; }
 .yt-reel-window::after{ content:""; position:absolute; inset:0; border-radius:50%; box-shadow:inset 0 0 10px 4px rgba(0,0,0,0.6); pointer-events:none; }
 
 .immersive .track-poet{ font-size:0.86rem; letter-spacing:0.05em; color:var(--parchment-dim); margin-bottom:8px; }
@@ -491,6 +491,24 @@ input[type=range]::-moz-range-thumb{ width:9px; height:9px; border-radius:50%; b
   .brand-hi{ display:none; }
   .scripts{ gap:14px; }
 }
+
+/* ---- poetry reader, credit ---- */
+@media (max-width:980px){ .poem-list{ list-style:none; margin:22px 0 0; padding:0; max-width:640px; }
+.poem-list li{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 4px; border-bottom:1px solid var(--rule); cursor:pointer; font-family:var(--font-display); font-size:1.15rem; }
+.poem-list li:hover{ color:var(--gold); }
+.poem-list li small{ font-family:var(--font-body); font-size:.74rem; color:var(--parchment-faint); }
+.poem-view{ max-width:640px; padding-top:22px; }
+.poem-view h3{ margin:14px 0 4px; }
+.poem-body{ white-space:pre-wrap; font-family:var(--font-body); font-size:1.08rem; line-height:2; margin:22px 0; color:var(--parchment); }
+.poem-body.ur{ font-family:var(--font-urdu); direction:rtl; text-align:right; line-height:2.6; font-size:1.25rem; }
+.poem-form input,.poem-form textarea{ width:100%; background:var(--surface); border:1px solid var(--rule-2); color:var(--parchment); font-family:var(--font-body); font-size:.95rem; padding:12px 14px; margin:0 0 10px; }
+.poem-form textarea{ min-height:180px; }
+.poem-note{ color:var(--parchment-faint); font-size:.82rem; max-width:62ch; }
+.credit{ text-align:center; padding:46px 20px 30px; border-top:1px solid var(--rule); margin-top:40px; color:var(--parchment-faint); font-size:.86rem; }
+.credit a.ig{ color:var(--parchment); border-bottom:1px solid var(--gold-soft); }
+.credit a.ig:hover{ color:var(--gold); }
+.credit .btn{ margin-top:14px; }
+.credit .ph{ display:block; margin-top:12px; font-size:.72rem; }
 </style>
 </head>
 <body>
@@ -672,6 +690,13 @@ var POETS = [
     sources:[ {type:'playlist', id:'PLCTGa9vfQ95YtuZdOPj3McfUpY7gZPiVa'} ]
   }
 ];
+var WIKI = {'faiz-ahmed-faiz':'Faiz_Ahmed_Faiz','ahmad-faraz':'Ahmad_Faraz','jaun-elia':'Jaun_Elia','zia-mohyeddin':'Zia_Mohyeddin'};
+var SEED_TITLES = {
+  'faiz-ahmed-faiz':['Mujh Se Pehli Si Mohabbat','Hum Dekhenge','Bol','Gulon Mein Rang Bhare','Rang Hai Dil Ka Mere'],
+  'ahmad-faraz':['Ranjish Hi Sahi','Suna Hai Log Use','Ab Ke Hum Bichhde','Aankh Se Dur Na Ho'],
+  'jaun-elia':['Ye Mujhe Chain Kyon Nahin Padta','Shayad','Ek Hi Muzhda'],
+  'zia-mohyeddin':[]
+};
 var POET_BY_SLUG = {};
 POETS.forEach(function(p){ POET_BY_SLUG[p.slug] = p; });
 
@@ -898,7 +923,7 @@ function probePlaylistIds(listId){
       }
       killer = setTimeout(function(){ finish(new Error('probe timeout')); }, 20000);
       pl = new YT.Player(holder.id, {
-        height:'64', width:'64',
+        height:'200', width:'200',
         playerVars: ytVars({listType:'playlist', list:listId}),
         events:{
           onReady:function(){
@@ -1013,7 +1038,7 @@ var RATES = [0.5,0.75,1,1.25,1.5,1.75,2];
 function onYouTubeIframeAPIReady(){
   YT_WAITERS.splice(0).forEach(function(f){ f(); });
   YT_STATE.player = new YT.Player('yt-target', {
-    height:'64', width:'64',
+    height:'200', width:'200',
     playerVars: ytVars(),
     events:{
       onReady:function(){
@@ -1028,14 +1053,24 @@ function onYouTubeIframeAPIReady(){
 }
 function onPlayerStateChange(e){
   var YTs = window.YT.PlayerState;
-  if(e.data === YTs.PLAYING){ Player.playing=true; startPoll(); Player._syncPlayIcons(); }
+  if(e.data === YTs.PLAYING){ clearTimeout(ytStartTimer); var fb=document.getElementById('ytFallback'); if(fb) fb.remove(); Player.playing=true; startPoll(); Player._syncPlayIcons(); }
   else if(e.data === YTs.PAUSED){ Player.playing=false; stopPoll(); Player._syncPlayIcons(); }
   else if(e.data === YTs.ENDED){ Player.playing=false; stopPoll(); Player._onEnded(); }
   else if(e.data === YTs.CUED){ /* ready to play */ }
 }
+function ytFallback(msg){
+  var r = Player.current; if(!r) return;
+  var old = document.getElementById('ytFallback'); if(old) old.remove();
+  var d = document.createElement('div'); d.id='ytFallback';
+  d.style.cssText='position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:900;background:#221d16;border:1px solid rgba(173,139,82,.5);color:#ece2c9;padding:12px 16px;font-size:.85rem;max-width:92vw;text-align:center';
+  d.innerHTML = esc(msg)+' <a href="https://www.youtube.com/watch?v='+esc(r.videoId)+'" target="_blank" rel="noopener noreferrer" style="color:#ad8b52;border-bottom:1px solid #ad8b52;margin-left:6px">Open on YouTube</a>';
+  document.body.appendChild(d); setTimeout(function(){ d.remove(); }, 15000);
+}
+var ytStartTimer = null;
 function onPlayerError(e){
   var codes = {2:'This recording\u2019s link looks invalid.',5:'This recording can\u2019t play in this browser.',100:'This recording has been removed from the archive.',153:'YouTube refuses embedded playback when this page is opened straight from a file. Host it on any web address (Netlify Drop, GitHub Pages) or run a local server.',101:'The uploader has disabled listening outside YouTube for this recording.',150:'The uploader has disabled listening outside YouTube for this recording.'};
-  toast(codes[e.data] || 'This recording can\u2019t be played right now.', e.data===153?9000:2600);
+  if([101,150,153,5].indexOf(e.data)>-1){ ytFallback(e.data===153 ? 'Playback is blocked because the file was opened directly (file://).' : 'This recording can\u2019t play inside the app.'); }
+  else toast(codes[e.data] || 'This recording can\u2019t be played right now.', 2600);
   if(e.data===153){ Player.playing=false; Player._syncPlayIcons(); return; }
   Player._markUnplayable();
 }
@@ -1126,6 +1161,7 @@ var Player = {
   _loadNow: function(videoId){
     if(!YT_STATE.ready){ YT_STATE.pendingVideoId = videoId; return; }
     YT_STATE.player.loadVideoById(videoId);
+    clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(YT_STATE.player.getPlayerState && YT_STATE.player.getPlayerState()!==1){ ytFallback('Playback didn\u2019t start.'); } }, 6000);
     YT_STATE.player.setPlaybackRate(Store.rate);
     YT_STATE.player.setVolume(Store.volume);
   },
@@ -1312,7 +1348,7 @@ function renderHome(){
       '<div class="kicker"><span class="line"></span><span class="eyebrow">a digital mehfil</span></div>' +
       '<h1 class="h-hero">Awaargii</h1><div class="scripts"><span class="hi" lang="hi">आवारगी</span><span class="ur urdu" lang="ur">آوارگی</span></div>' +
       '<div class="urdu-line urdu">\u062c\u06c1\u0627\u06BA \u0644\u0641\u0638 \u0622\u0648\u0627\u0632 \u0628\u0646 \u062C\u0627\u062A\u06D2 \u06C1\u06CC\u06BA</div>' +
-      '<p class="lede">Four voices, recorded and recited across half a century of Urdu literature \u2014 Faiz, Faraz, Jaun Elia and Zia Mohyeddin \u2014 gathered into one quiet room for late-night listening.</p>' +
+      '<p class="lede">Half a century of Urdu literature \u2014 Faiz, Faraz, Jaun Elia and Zia Mohyeddin \u2014 recited and gathered into one quiet room for late-night listening.</p>' +
       '<div class="hero-cta">' +
         '<button class="btn primary" data-action="goto" data-route="poet" data-slug="'+POETS[0].slug+'">Begin listening</button>' +
         '<button class="btn" data-action="goto" data-route="library">Browse the library</button>' +
@@ -1320,7 +1356,7 @@ function renderHome(){
     '</div>' +
   '</section>' +
   '<section class="block"><div class="wrap">' +
-    '<div class="section-head"><h2 class="h-2">Four voices</h2><a class="more" data-action="goto" data-route="poets">about the poets</a></div>' +
+    '<div class="section-head"><h2 class="h-2">The Poets</h2><a class="more" data-action="goto" data-route="poets">about the poets</a></div>' +
     '<div class="poet-grid">' + POETS.map(poetCardMarkup).join('') + '</div>' +
   '</div></section>';
 
@@ -1372,16 +1408,16 @@ function renderPoet(slug, tab){
       '<p class="bio">'+esc(poet.bio)+'</p>' +
       '<div class="stat-row">' +
         '<div class="stat"><b>'+sorted.length+'</b>recordings</div>' +
-        '<div class="stat"><b>'+(POETS.indexOf(poet)+1)+'</b>of four voices</div>' +
+        '<div class="stat"><b>'+(POETS.indexOf(poet)+1)+' / '+POETS.length+'</b>in the archive</div>' +
       '</div>' +
     '</div>' +
   '</div>' +
   '<div class="wrap" style="padding-top:34px;">' +
     '<div class="tab-row">' +
       '<button class="'+(tab==='read'?'':'active')+'" data-action="goto" data-route="poet" data-slug="'+slug+'">Recordings</button>' +
-      '<button class="'+(tab==='read'?'active':'')+'" data-action="goto" data-route="poet" data-slug="'+slug+'" data-filter="read">'+(poet.reciter?'On Rekhta':'Poetry in writing')+'</button>' +
+      '<button class="'+(tab==='read'?'active':'')+'" data-action="goto" data-route="poet" data-slug="'+slug+'" data-filter="read">'+(poet.reciter?'About his art':'Poetry')+'</button>' +
     '</div>' +
-    (tab==='read' ? readPanel(poet) : body) +
+    (tab==='read' ? readPanel(poet, App.poemIdx) : body) +
   '</div>';
 }
 
@@ -1402,31 +1438,54 @@ function poetEntryMarkup(poet){
       '<dl class="facts">' + fact('Born',poet.born) + fact('Died',poet.died) + fact('Known for',poet.known) + fact(poet.reciter?'Books':'Collections', poet.collections.join(', ')) + '</dl>' +
       '<div class="pe-actions">' +
         '<button class="btn primary" data-action="open-poet" data-slug="'+poet.slug+'">'+listen+'</button>' +
-        '<button class="btn" data-action="goto" data-route="poet" data-slug="'+poet.slug+'" data-filter="read">'+(poet.reciter?'Recitations on Rekhta':'Read the poetry')+'</button>' +
+        '<button class="btn" data-action="goto" data-route="poet" data-slug="'+poet.slug+'" data-filter="read">'+(poet.reciter?'About his art':'Read the poetry')+'</button>' +
       '</div>' +
     '</div>' +
   '</article>';
 }
 function renderPoets(){
   return '<div class="wrap" style="padding-top:44px;">' +
-    '<div class="section-head"><h1 class="h-1">The four voices</h1></div>' +
+    '<div class="section-head"><h1 class="h-1">Meet the Poets</h1></div>' +
     '<p class="dim" style="max-width:60ch;margin:0 0 8px;">Three poets and one reciter. Each has the recordings gathered here and a way into the written poetry.</p>' +
     '<div class="poets-index">' + POETS.map(poetEntryMarkup).join('') + '</div>' +
   '</div>';
 }
-function readPanel(poet){
-  var lead = poet.reciter
-    ? esc(poet.name)+' is remembered as a reciter rather than a writer of verse, so there is no body of his own poetry to read. Rekhta hosts videos of his recitations, and the recordings in this archive are on the Recordings tab.'
-    : esc(poet.name)+'\u2019s poems remain under copyright, so they are not reproduced in this app. Rekhta presents them in full, in Urdu, Hindi and Roman script, and the links below open there in a new tab.';
-  var links = poet.rekhta.map(function(l){
-    return '<a class="read-link" href="'+esc(l.url)+'" target="_blank" rel="noopener noreferrer"><span class="rl-label">'+esc(l.label)+'</span><span class="rl-host">rekhta.org</span></a>';
+function poemsFor(poet){
+  var mine = lsGet('poems_'+poet.slug, []);
+  var seed = (SEED_TITLES[poet.slug]||[]).filter(function(t){ return !mine.some(function(m){ return m.title===t; }); })
+    .map(function(t){ return {title:t, text:'', seed:true}; });
+  return mine.concat(seed);
+}
+function readPanel(poet, poemIdx){
+  var collections = '<h3 class="h-3" style="margin:34px 0 12px;">'+(poet.reciter?'Books':'Collections')+'</h3>' +
+    '<ul class="collections">'+poet.collections.map(function(c){ return '<li>'+esc(c)+'</li>'; }).join('')+'</ul>';
+  if(poet.reciter){
+    return '<div class="read-panel"><p class="read-lead">'+esc(poet.name)+' is remembered as a reciter rather than a writer of verse, so there is no body of his own poetry to read. His recitations are on the Recordings tab.</p>'+collections+'</div>';
+  }
+  var poems = poemsFor(poet);
+  if(poemIdx!=null && poems[poemIdx]){
+    var pm = poems[poemIdx];
+    var body = pm.text
+      ? '<div class="poem-body'+(/[\u0600-\u06FF]/.test(pm.text)?' ur':'')+'">'+esc(pm.text)+'</div>'
+      : '<p class="poem-note">This poem\u2019s text hasn\u2019t been added yet. Paste it below and it will be saved in Awaargii on this device.</p>';
+    return '<div class="poem-view">' +
+      '<button class="btn small" data-action="poem-back" data-slug="'+poet.slug+'">\u2190 All poems</button>' +
+      '<h3 class="h-1">'+esc(pm.title)+'</h3><div class="faint">'+esc(poet.name)+'</div>' + body +
+      '<div class="poem-form"><textarea id="poemText" placeholder="Paste the poem (Urdu, Hindi or Roman)">'+esc(pm.text||'')+'</textarea>' +
+      '<button class="btn primary small" data-action="poem-save" data-slug="'+poet.slug+'" data-idx="'+poemIdx+'">Save text</button>' +
+      (pm.seed?'':' <button class="btn small" data-action="poem-del" data-slug="'+poet.slug+'" data-idx="'+poemIdx+'">Remove</button>') + '</div></div>';
+  }
+  var items = poems.map(function(pm,i){
+    return '<li data-action="poem-open" data-slug="'+poet.slug+'" data-idx="'+i+'"><span>'+esc(pm.title)+'</span><small>'+(pm.text?'read':'add text')+'</small></li>';
   }).join('');
   return '<div class="read-panel">' +
-    '<p class="read-lead">'+lead+'</p>' +
-    '<div class="read-links">'+links+'</div>' +
-    '<h3 class="h-3" style="margin:34px 0 12px;">'+(poet.reciter?'Books':'Collections')+'</h3>' +
-    '<ul class="collections">'+poet.collections.map(function(c){ return '<li>'+esc(c)+'</li>'; }).join('')+'</ul>' +
-  '</div>';
+    '<p class="read-lead">Read '+esc(poet.name)+'\u2019s poetry right here in Awaargii. Open a poem, or add your own with the form below.</p>' +
+    '<ul class="poem-list">'+items+'</ul>' +
+    '<div class="poem-form" style="margin-top:28px;max-width:640px;"><h3 class="h-3" style="margin:0 0 10px;">Add a poem</h3>' +
+    '<input id="poemTitle" placeholder="Title"><textarea id="poemNew" placeholder="Poem text"></textarea>' +
+    '<button class="btn primary small" data-action="poem-add" data-slug="'+poet.slug+'">Add poem</button>' +
+    '<p class="poem-note" style="margin-top:12px;">Poems stay under copyright, so their full text isn\u2019t bundled with the app. Anything you add is stored only in this browser.</p></div>' +
+    collections + '</div>';
 }
 
 /* ============================================================
@@ -1533,8 +1592,11 @@ function parseHash(){
   return { route:route, param: param, query: query };
 }
 
+var CREDIT = '<footer class="credit">Made by <a class="ig" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">@md.ismaiiil</a><br><a class="btn small" href="https://www.instagram.com/md.ismaiiil?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">Follow on Instagram</a></footer>';
 function renderRoute(){
   var h = parseHash();
+  if(App.route!==h.route || App.routeParam!==h.param || h.query.tab!==App.lastTab){ if(!App._keepPoem) App.poemIdx = null; }
+  App.lastTab = h.query.tab;
   App.route = h.route; App.routeParam = h.param;
 
   if(h.route==='setup'){ location.hash = '#/home'; return; }
@@ -1546,7 +1608,7 @@ function renderRoute(){
   else if(h.route==='search'){ mainHtml = renderSearch(h.query.q || h.param); }
   else { mainHtml = renderHome(); App.route='home'; }
 
-  document.getElementById('app').innerHTML = renderNav() + '<main class="page">' + mainHtml + '</main>';
+  document.getElementById('app').innerHTML = renderNav() + '<main class="page">' + mainHtml + CREDIT + '</main>';
   Player._syncPlayIcons();
   if(Player.current){
     $all('.rec-row').forEach(function(row){ row.classList.toggle('playing', row.getAttribute('data-rid')===Player.current.id); });
@@ -1657,7 +1719,29 @@ document.addEventListener('click', function(e){
   if(action==='goto'){
     location.hash = routeHashFor(t.getAttribute('data-route'), t.getAttribute('data-slug'), t.getAttribute('data-filter'));
   }
+  else if(action==='poem-open'){ App.poemIdx = +t.getAttribute('data-idx'); refreshView(); window.scrollTo(0,0); }
+  else if(action==='poem-back'){ App.poemIdx = null; refreshView(); }
+  else if(action==='poem-add' || action==='poem-save' || action==='poem-del'){
+    var sl = t.getAttribute('data-slug'), pt = POET_BY_SLUG[sl], mine = lsGet('poems_'+sl, []);
+    if(action==='poem-add'){
+      var ti = $('#poemTitle').value.trim(), tx = $('#poemNew').value.trim();
+      if(!ti || !tx){ toast('Add a title and the poem text'); return; }
+      mine.unshift({title:ti, text:tx}); lsSet('poems_'+sl, mine); toast('Poem added');
+    } else {
+      var idx = +t.getAttribute('data-idx'), list = poemsFor(pt), cur = list[idx];
+      if(action==='poem-save'){
+        var v = $('#poemText').value.trim(); if(!v) return;
+        var k = mine.findIndex(function(m){ return m.title===cur.title; });
+        if(k>-1) mine[k].text = v; else mine.unshift({title:cur.title, text:v});
+        lsSet('poems_'+sl, mine); toast('Saved');
+      } else {
+        mine = mine.filter(function(m){ return m.title!==cur.title; }); lsSet('poems_'+sl, mine); App.poemIdx = null;
+      }
+    }
+    refreshView();
+  }
   else if(action==='open-poet'){
+    App.poemIdx = null;
     location.hash = '#/poet/'+encodeURIComponent(t.getAttribute('data-slug'));
   }
   else if(action==='play-context'){
