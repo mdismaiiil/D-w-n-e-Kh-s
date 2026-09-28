@@ -1685,11 +1685,13 @@ function unplaceVideo(){
   host.classList.remove('live');
   host.style.left = host.style.top = host.style.width = host.style.height = host.style.right = host.style.bottom = host.style.clipPath = '';
 }
+/* set to true to show a small floating video whenever a recording plays and the full view is closed */
+var FLOATING_VIDEO = false;
 function refreshHost(){
   var host = $('#yt-host'); if(!host) return;
   if($('#immersive').classList.contains('show')){ placeVideo(); return; }
   unplaceVideo();
-  host.classList.toggle('float', !!Player.current);
+  host.classList.toggle('float', FLOATING_VIDEO && !!Player.current);
 }
 function openImmersive(){
   $('#immersive').classList.add('show'); document.body.style.overflow='hidden';
