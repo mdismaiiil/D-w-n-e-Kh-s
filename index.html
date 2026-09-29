@@ -886,7 +886,7 @@ var Store = {
   rate: lsGet('rate', 1),
   repeatMode: lsGet('repeatMode', 'off'),    // off | all | one
   cache: lsGet('cache2', {}),                 // { [poetSlug]: {items:[...], fetchedAt: ts} }
-  recDb: lsGet('recDb', {}),                 // flat map id -> recording, for favorites/recent lookups across sessions
+  recDb: lsGet('recDb2', {}),                 // flat map id -> recording, for favorites/recent lookups across sessions
 
   saveFavorites: function(){ lsSet('favorites', this.favorites); },
   saveRecent: function(){ lsSet('recent', this.recent); },
@@ -895,7 +895,7 @@ var Store = {
   saveRate: function(){ lsSet('rate', this.rate); },
   saveRepeat: function(){ lsSet('repeatMode', this.repeatMode); },
   saveCache: function(){ lsSet('cache2', this.cache); },
-  saveRecDb: function(){ lsSet('recDb', this.recDb); },
+  saveRecDb: function(){ lsSet('recDb2', this.recDb); },
   saveApiKey: function(k){ this.apiKey = k; lsSet('apiKey', k); },
 
   rememberRecordings: function(list){
