@@ -1175,7 +1175,7 @@ function showInAppBanner(){
   if(document.getElementById('iabBanner')) return;
   var d = document.createElement('div'); d.id='iabBanner';
   d.style.cssText='position:fixed;left:0;right:0;top:0;z-index:950;background:#221d16;border-bottom:1px solid rgba(173,139,82,.5);color:#ece2c9;padding:11px 44px 11px 16px;font-size:.82rem;line-height:1.5;';
-  d.innerHTML = 'YouTube playback is blocked inside Instagram\u2019s in-app browser. Tap the \u22ef menu above and choose <b>Open in Browser</b> (Chrome or Safari) for sound to work.' +
+  d.innerHTML = 'Sound is blocked inside Instagram\u2019s in-app browser. Tap the \u22ef menu above and choose <b>Open in Browser</b> (Chrome or Safari) for sound to work.' +
     '<button id="iabClose" aria-label="Dismiss" style="position:absolute;right:10px;top:8px;background:none;border:0;color:#ece2c9;font-size:1.1rem;line-height:1;cursor:pointer;">\u00d7</button>';
   document.body.appendChild(d);
   document.getElementById('iabClose').addEventListener('click', function(){ d.remove(); });
@@ -1191,7 +1191,7 @@ function ytFallback(msg){
 var ytStartTimer = null;
 function onPlayerError(e){
   var codes = {2:'This recording\u2019s link looks invalid.',5:'This recording can\u2019t play in this browser.',100:'This recording has been removed from the archive.',153:'YouTube refuses embedded playback when this page is opened straight from a file. Host it on any web address (Netlify Drop, GitHub Pages) or run a local server.',101:'The uploader has disabled listening outside YouTube for this recording.',150:'The uploader has disabled listening outside YouTube for this recording.'};
-  if([101,150,153,5].indexOf(e.data)>-1){ ytFallback(isInAppBrowser() ? 'Instagram\u2019s in-app browser blocks YouTube sound. Open this page in Chrome or Safari.' : (e.data===153 ? 'Playback is blocked because the file was opened directly (file://).' : 'YouTube blocked embedded playback for this recording (error '+e.data+').')); }
+  if([101,150,153,5].indexOf(e.data)>-1){ ytFallback(isInAppBrowser() ? 'Instagram\u2019s in-app browser blocks Awaargii\u2019s sound. Open this page in Chrome or Safari.' : (e.data===153 ? 'Playback is blocked because the file was opened directly (file://).' : 'YouTube blocked embedded playback for this recording (error '+e.data+').')); }
   else toast(codes[e.data] || 'This recording can\u2019t be played right now.', 2600);
   if(e.data===153){ Player.playing=false; Player._syncPlayIcons(); return; }
   if([101,150,5].indexOf(e.data)>-1){ Player.playing=false; Player._syncPlayIcons(); return; }
@@ -1284,12 +1284,12 @@ var Player = {
   _loadNow: function(videoId){
     if(!YT_STATE.ready){
       YT_STATE.pendingVideoId = videoId;
-      clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(!YT_STATE.ready) ytFallback(isInAppBrowser() ? 'Instagram\u2019s in-app browser blocks YouTube sound. Open this page in Chrome or Safari.' : 'The YouTube player didn\u2019t load (blocked network, ad-blocker or offline).'); }, 8000);
+      clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(!YT_STATE.ready) ytFallback(isInAppBrowser() ? 'Instagram\u2019s in-app browser blocks Awaargii\u2019s sound. Open this page in Chrome or Safari.' : 'The YouTube player didn\u2019t load (blocked network, ad-blocker or offline).'); }, 8000);
       if(window.YT && window.YT.Player) ytInit();
       return;
     }
     YT_STATE.player.loadVideoById(videoId);
-    clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(YT_STATE.player.getPlayerState && [1,3].indexOf(YT_STATE.player.getPlayerState())===-1){ ytFallback(isInAppBrowser() ? 'Instagram\u2019s in-app browser blocks YouTube sound. Open this page in Chrome or Safari.' : 'Playback didn\u2019t start.'); } }, 6000);
+    clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(YT_STATE.player.getPlayerState && [1,3].indexOf(YT_STATE.player.getPlayerState())===-1){ ytFallback(isInAppBrowser() ? 'Instagram\u2019s in-app browser blocks Awaargii\u2019s sound. Open this page in Chrome or Safari.' : 'Playback didn\u2019t start.'); } }, 6000);
     YT_STATE.player.setPlaybackRate(Store.rate);
     YT_STATE.player.setVolume(Store.volume);
   },
