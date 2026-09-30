@@ -630,14 +630,11 @@ input[type=range]::-moz-range-progress{ background:var(--gold); height:3px; bord
     </div>
 
     <div class="secondary-row">
-      <button class="ctrl-btn" id="immRateDown" title="Slower" aria-label="Slower">−</button>
-      <div class="rate-label" id="rateLabel">1.0×</div>
-      <button class="ctrl-btn" id="immRateUp" title="Faster" aria-label="Faster">+</button>
+      <button class="ctrl-btn" id="immQueueBtn" title="Queue" aria-label="Open queue"></button>
       <div class="vol-wrap">
         <button class="ctrl-btn" id="immMute" title="Mute" aria-label="Mute"></button>
         <input type="range" id="volSlider" min="0" max="100" value="80">
       </div>
-      <button class="ctrl-btn" id="immQueueBtn" title="Queue" aria-label="Open queue"></button>
     </div>
 
     <button class="about-toggle" id="aboutToggle">about this recording</button>
@@ -1391,7 +1388,7 @@ var Player = {
     }
     YT_STATE.player.loadVideoById(videoId);
     clearTimeout(ytStartTimer); ytStartTimer = setTimeout(function(){ if(YT_STATE.player.getPlayerState && [1,3].indexOf(YT_STATE.player.getPlayerState())===-1){ ytFallback(isInAppBrowser() ? 'Instagram\u2019s in-app browser blocks Awaargii\u2019s sound. Open this page in Chrome or Safari.' : 'Playback didn\u2019t start.'); } }, 6000);
-    YT_STATE.player.setPlaybackRate(Store.rate);
+    YT_STATE.player.setPlaybackRate(1);
     YT_STATE.player.setVolume(Store.volume);
   },
   _markUnplayable: function(){
@@ -1484,7 +1481,6 @@ var Player = {
     $('#aboutPanel').innerHTML = '<div><strong class="dim">Poet:</strong> '+esc(r.poetName)+'</div>'+
       '<div><strong class="dim">Source:</strong> '+esc(r.collection||'YouTube')+'</div>'+
       '<div><strong class="dim">Recording:</strong> '+esc(r.title)+'</div>';
-    $('#rateLabel').textContent = Store.rate.toFixed(2).replace(/0$/,'').replace(/\.$/,'.0') + '\u00d7';
     $('#volSlider').value = Store.volume; $('#volSlider').style.setProperty('--val', Store.volume+'%');
     this._syncFavIcon(Store.isFavorite(r.id));
     this._syncRepeatIcon();
@@ -1874,8 +1870,6 @@ function bindStaticControls(){
   $('#immRepeat').addEventListener('click', function(){ Player.toggleRepeat(); });
   $('#immFav').addEventListener('click', function(){ Player.toggleFavoriteCurrent(); });
   $('#immFav').innerHTML = ICON.heart;
-  $('#immRateUp').addEventListener('click', function(){ Player.rateUp(); });
-  $('#immRateDown').addEventListener('click', function(){ Player.rateDown(); });
   $('#immMute').innerHTML = ICON.vol;
   $('#immMute').addEventListener('click', function(){ Player.toggleMute(); });
   $('#immQueueBtn').innerHTML = ICON.queue;
